@@ -2,6 +2,8 @@ package form;
 
 import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -49,13 +51,25 @@ public class MainForm extends JFrame {
 		//Preduzece menu
 		JMenu preduzeceMenu=new JMenu("Preduzece");
 		JMenuItem podaciMI= new JMenuItem("Podaci o preduzecu");
+		
+		
+		JMenuItem magacinMenu=new JMenuItem("Magacin");
+		magacinMenu.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MagacinskaKarticaForm mk=new MagacinskaKarticaForm();
+				
+				setVisible(false);
+				mk.setVisible(true);
+				mk.setVisible(false);
+				setVisible(true);
+				
+			}
+		});
+		
+		preduzeceMenu.add(magacinMenu);
 		preduzeceMenu.add(podaciMI);
-		
-		JMenu sektorMenu=new JMenu("Sektor");
-		preduzeceMenu.add(sektorMenu);
-		JMenuItem magacinMI= new JMenuItem("Magacin");
-		sektorMenu.add(magacinMI);
-		
 		mb.add(preduzeceMenu);
 		
 		//Poslovni partner menu
@@ -70,12 +84,6 @@ public class MainForm extends JFrame {
 		
 		//Prometni dokument
 		JMenu pdMenu= new JMenu("Prometni dokument");
-		JMenu pgMenu=new JMenu("Poslovna godina");
-		JMenuItem pg1MenuI =new JMenuItem("2015");
-		JMenuItem pg2MenuI =new JMenuItem("2016");
-		pgMenu.add(pg1MenuI);
-		pgMenu.add(pg2MenuI);
-		pdMenu.add(pgMenu);
 		mb.add(pdMenu);
 	}
 	

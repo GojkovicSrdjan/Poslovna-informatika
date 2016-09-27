@@ -248,8 +248,17 @@ create table "Analitika magacinske kartice"
    vrednost             decimal                        null,
    amk_id               numeric                        not null,
    "magacinska kartica" numeric                        null,
-   "tip promene"        text                        null,
+   "tip promene"        numeric                        not null,
    constraint "PK_ANALITIKA MAGACINSKE KARTIC" primary key clustered (amk_id)
+);
+
+/*Tip promene
+*/
+create table "Tip promene" 
+(
+   tip_id numeric                        not null,
+   naziv                text                   null,
+   constraint "PK_TIP PROMENE" primary key clustered (tip_id)
 );
 
 /*==============================================================*/
@@ -692,6 +701,10 @@ alter table Artikal
       references "Stavke popisa" (sp_id);
       --on update restrict
       --on delete restrict;
+      
+ALTER Table "Analitika magacinske kartice"
+	add constraint FK_ANALITIK_RELATIONS_TIP foreign key ("tip promene")
+		references "Tip promene" (tip_id);
 
 alter table Artikal
    add constraint "FK_ARTIKAL_RELATIONS_GRUPA AR" foreign key ("grupa artikala")
@@ -836,3 +849,9 @@ alter table "Stavke popisa"
       references Artikal (artikal_id);
       --on update restrict
       --on delete restrict;
+
+insert into [Vrsta dokumenta] values (1, 'Prijemnica'),(2, 'Otpremnica'), (3, 'Medjumagacinski dokument')
+
+insert into [Status dokumenta] values(1, 'U formiranju'), (2, 'Proknjizen'), (3, 'Storniran')
+
+insert into [Tip promene] values(1,'Proknjizen prometni dok'), (2, 'Proknjizen popisni dok'), (3, 'Proknjizeno pocetno stanje'), (4, 'Uradjena nivelacija')
