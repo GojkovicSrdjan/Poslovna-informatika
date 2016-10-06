@@ -14,7 +14,9 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 
+import actions.AddAction;
 import actions.CommitAction;
+import actions.DeleteAction;
 import actions.FirstAction;
 import actions.HelpAction;
 import actions.LastAction;
@@ -114,6 +116,15 @@ public class SektorForm extends JDialog {
 				
 			}
 		});
+		
+		toolBar.addSeparator(new Dimension(50, 0));
+		
+		btnAdd = new JButton(new AddAction(this));
+		toolBar.add(btnAdd);
+		
+		btnDelete = new JButton(new DeleteAction(this));
+		toolBar.add(btnDelete);
+		
 		add(toolBar, "dock north");
 	}
 	

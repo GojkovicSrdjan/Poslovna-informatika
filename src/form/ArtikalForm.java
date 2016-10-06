@@ -14,11 +14,14 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 
+import actions.AddAction;
 import actions.CommitAction;
+import actions.DeleteAction;
 import actions.FirstAction;
 import actions.HelpAction;
 import actions.LastAction;
 import actions.NextAction;
+import actions.NextFormAction;
 import actions.PickupAction;
 import actions.PreviousAction;
 import actions.RefreshAction;
@@ -114,6 +117,33 @@ public class ArtikalForm extends JDialog {
 				
 			}
 		});
+		
+		toolBar.addSeparator(new Dimension(50, 0));
+		
+		btnAdd = new JButton(new AddAction(this));
+		toolBar.add(btnAdd);
+		
+		btnDelete = new JButton(new DeleteAction(this));
+		toolBar.add(btnDelete);
+		
+		toolBar.addSeparator(new Dimension(50, 0));
+		
+		btnNextForm=new JButton(new NextFormAction(this));
+		btnNextForm.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setVisible(false);
+				GrupaArtikalaForm gaf=new GrupaArtikalaForm();
+				gaf.setVisible(true);
+				gaf.setVisible(false);
+				setVisible(true);
+				
+			}
+		});
+		
+		toolBar.add(btnNextForm);
+		
 		add(toolBar, "dock north");
 	}
 	
@@ -131,7 +161,7 @@ public class ArtikalForm extends JDialog {
 	      add(scrollPane, "wrap, grow");
 
 	      // Kreiranje TableModel-a, parametri: header-i kolona i broj redova 
-	      tableModel = new ArtikalTableModel(new String[] {"Šifra",   "Naziv"}, 0);
+	      tableModel = new ArtikalTableModel(new String[] {"Sifra",   "Naziv"}, 0);
 	      tblGrid.setModel(tableModel);
 	      
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

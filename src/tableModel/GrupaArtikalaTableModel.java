@@ -9,6 +9,7 @@ import java.sql.Statement;
 import javax.swing.table.DefaultTableModel;
 
 import db.DBConnection;
+import model.GrupaArtikala;
 import utils.SortUtils;
 
 public class GrupaArtikalaTableModel extends DefaultTableModel {
@@ -85,12 +86,12 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 			}
 		}
 	  
-		 public void deleteRow(int index) throws SQLException {
+		 public void deleteRow(int index, String id) throws SQLException {
 			 checkRow(index);
 			    PreparedStatement stmt = DBConnection.getConnection().prepareStatement(
-			        "DELETE FROM [Grupa artikala] ga_id=?");
+			        "DELETE FROM [Grupa artikala] where ga_id=?");
 			    String sifra = (String)getValueAt(index, 0);
-			    stmt.setString(1, sifra);
+			    stmt.setInt(1, Integer.parseInt(id));
 			    //Brisanje iz baze 
 			    int rowsAffected = stmt.executeUpdate();
 			    stmt.close();
@@ -103,11 +104,11 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 			  }
 		 
 
-		 public void search(String sifraPretraga, String nazivGrupePretraga) throws SQLException{
+		 public void search(GrupaArtikala ga) throws SQLException{
 			 PreparedStatement stmt = DBConnection.getConnection().prepareStatement(
 				        "Select ga_id, nazivGrupe from [Grupa artikala] where ga_id like ? and nazivGrupe like ?");
-			 stmt.setString(1, "%"+sifraPretraga+"%");
-			 stmt.setString(2, "%"+nazivGrupePretraga+"%");
+			 stmt.setString(1, "%"+ga.getId()+"%");
+			 stmt.setString(2, "%"+ga.getNazivGrupe()+"%");
 			 ResultSet rset = stmt.executeQuery();
 			    while (rset.next()) {
 				      String sifra = rset.getString("ga_id");
@@ -120,17 +121,17 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 			    fireTableDataChanged();
 		 }
 		 
-		 public int editRow(String sifra, String nazivGrupe,int index) throws SQLException{
+		 public int editRow(GrupaArtikala ga ,int index) throws SQLException{
 			 int retVal = 0;
 			 PreparedStatement stmt= DBConnection.getConnection().prepareStatement("UPDATE [Grupa artikala] set nazivGrupe=? where ga_id=?");
-			 stmt.setString(1, nazivGrupe);
-			 stmt.setString(2, sifra);
+			 stmt.setString(1, ga.getNazivGrupe());
+			 stmt.setInt(2, ga.getId());
 			 int rowsAffected=stmt.executeUpdate();
 			 stmt.close();
 			 DBConnection.getConnection().commit();
 			 if (rowsAffected > 0) {
 				 retVal = index;
-				 setValueAt(nazivGrupe, index, 1);
+				 setValueAt(ga.getNazivGrupe(), index, 1);
 			      fireTableDataChanged();
 			    }
 			    return retVal;
@@ -158,19 +159,19 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 			  }
 			
 
-			  public int insertRow(String sifra, String nazivGrupe) throws SQLException {
+		  public int insertRow(GrupaArtikala ga) throws SQLException {
 			    int retVal = 0;
 			    PreparedStatement stmt = DBConnection.getConnection().prepareStatement(
-			      "INSERT INTO [Grupa artikala] (ga_id, nazivGrupe) VALUES (? ,?)");
-			    stmt.setString(1, sifra);
-			    stmt.setString(2, nazivGrupe);
+			      "INSERT INTO [Grupa artikala] (nazivGrupe) VALUES (?)");
+
+//			    		stmt.setInt(1, ga.getId());
+			    stmt.setString(1, ga.getNazivGrupe());
 			    int rowsAffected = stmt.executeUpdate();
 			    stmt.close();
 			    //Unos sloga u bazu
 			    DBConnection.getConnection().commit();
 			    if (rowsAffected > 0) {
-			      // i unos u TableModel  
-			      retVal = sortedInsert(sifra, nazivGrupe);
+			      fillData(basicQuery + whereStmt + orderBy);
 			      fireTableDataChanged();
 			    }
 			    return retVal;
