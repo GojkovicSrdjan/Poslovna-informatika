@@ -26,6 +26,10 @@ import actions.PickupAction;
 import actions.PreviousAction;
 import actions.RefreshAction;
 import actions.SearchAction;
+import model.Artikal;
+import model.Magacin;
+import model.MagacinskaKartica;
+import model.Sektor;
 import tableModel.AnalitikaMKTableModel;
 
 public class AMKForm extends JDialog {
@@ -47,18 +51,22 @@ public class AMKForm extends JDialog {
 	public JTextField txtMagacin;
 	public JTextField txtSektor;
 	public JTextField txtAMK;
-	public JComboBox<String> cbTipFakture;
 	public JTextField txtPosGod;
 	public JTextField txtDatumObracuna;
 	public JTextField txtSifraArtikla;
 	public JTextField txtPakovanje;
 	public JTextField txtPozivNaBroj;
 	public JButton commit;
+	public String selectedSektor;
+	public String selectedMagacin;
+	public String selectedArtikal;
 	private JButton btnAdd, btnCommit, btnDelete, btnFirst, btnLast, btnHelp, btnNext, btnNextForm,
 	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious;
 	private JToolBar toolBar;
 	
-	public AMKForm(){
+	public AMKForm(String MKsektor, String MKsektorId,
+			String MKmagacin, String MKmagacinId,
+			String MKartikal, String MKartikalId){
 		
 		setSize(1150, 650);
 		setTitle("Analitika magacinske kartice");
@@ -74,6 +82,8 @@ public class AMKForm extends JDialog {
 		JLabel lSektor = new JLabel("Sektor");
 		txtSektor = new JTextField(10);
 		txtSektor.setEditable(false);
+		txtSektor.setText(MKsektor);
+		selectedSektor=MKsektorId;
 		
 		JButton btn1 = new JButton("...");
 		btn1.addActionListener(new ActionListener() {
@@ -82,10 +92,15 @@ public class AMKForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				SektorForm sf=new SektorForm();
 				
-				setVisible(false);
 				sf.setVisible(true);
-				sf.setVisible(false);
-				setVisible(true);
+				try{
+					Sektor s=sf.getSektor();
+					selectedSektor=s.getId().toString();
+					txtSektor.setText(s.getNaziv());
+					//btn2.setEnabled(true);
+				}catch(NullPointerException e1){
+					
+				}
 				
 			}
 		});
@@ -96,25 +111,35 @@ public class AMKForm extends JDialog {
 		sektor.add(lSektor);
 		sektor.add(txtSektor);
 		sektor.add(btn1);
-		
 		//magacin
 		JLabel lMagacin = new JLabel("Magacin");
 		
 		txtMagacin = new JTextField(10);
 		txtMagacin.setEditable(false);
-
+		txtMagacin.setText(MKmagacin);
+		selectedMagacin=MKmagacinId;
+		
 		JButton btn2 = new JButton("...");
+
+		//btn2.setEnabled(false);
+		
+		
 		btn2.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				MagacinForm mf= new MagacinForm();
+				MagacinForm mf= new MagacinForm(selectedSektor);
 				
-				setVisible(false);
 				mf.setVisible(true);
-				mf.setVisible(false);
-				setVisible(true);
-				
+				try{
+//					Magacin m=mf.getMagacin();
+					Magacin m=mf.magacin;
+					selectedMagacin=m.getId().toString();
+					txtMagacin.setText(m.getNaziv());
+					
+				}catch(NullPointerException e1){
+					
+				}
 			}
 		});
 		btn2.setSize(18, 20);
@@ -160,16 +185,24 @@ public class AMKForm extends JDialog {
 		JLabel lArtikal = new JLabel("Artikal");
 		txtArtikal = new JTextField(10);
 		txtArtikal.setEditable(false);
+		txtArtikal.setText(MKartikal);
+		selectedArtikal=MKartikalId;
+		
 		JButton btnArtikal = new JButton("...");
 		btnArtikal.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ArtikalForm af=new ArtikalForm();
-				setVisible(false);
+				ArtikalForm af=new ArtikalForm(selectedMagacin);				
 				af.setVisible(true);
-				af.setVisible(false);
-				setVisible(true);
+				
+				try {
+					Artikal a=af.artikal;
+					txtArtikal.setText(a.getNaziv());
+					selectedArtikal=a.getId().toString();
+				} catch (NullPointerException e2) {
+					
+				}
 				
 			}
 		});
@@ -211,8 +244,6 @@ public class AMKForm extends JDialog {
 		verticalBox2.add(Box.createVerticalStrut(15));
 
 		verticalBox2.add(nazivArtikla);
-		verticalBox2.add(pakovanje);
-		verticalBox2.add(sifraArtikla);
 
 		Box verticalBox = new Box(BoxLayout.Y_AXIS);
 		Box horizontalBox = new Box(BoxLayout.X_AXIS);
@@ -318,5 +349,6 @@ public class AMKForm extends JDialog {
 		});
 		add(toolBar, BorderLayout.NORTH);
 	}
+
 
 }

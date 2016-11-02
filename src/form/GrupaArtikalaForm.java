@@ -48,7 +48,7 @@ public class GrupaArtikalaForm extends JDialog {
 	private JTextField tfNazivGrupe = new JTextField(20);
 	private GrupaArtikalaTableModel tableModel;
 	private JTable tblGrid = new JTable(); 
-	private GrupaArtikala ga;
+	public GrupaArtikala ga;
 	
 	private static final int MODE_EDIT=1;
 	private static final int MODE_ADD=2;
@@ -66,7 +66,6 @@ public class GrupaArtikalaForm extends JDialog {
 		
 		mode=MODE_EDIT;
 		tfId.setEditable(false);
-		tblGrid.setRowSelectionInterval(0, 0);
 		
 	}
 	
@@ -93,6 +92,20 @@ public class GrupaArtikalaForm extends JDialog {
 		toolBar.add(btnRefresh);
 
 		btnPickup = new JButton(new PickupAction(this));
+		btnPickup.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(tblGrid.getSelectedRow()!=-1){
+					ga=new GrupaArtikala();
+					ga.setId(Integer.parseInt(tfId.getText().trim()));
+					ga.setNazivGrupe(tfNazivGrupe.getText().trim());
+					setVisible(false);
+				
+				}else
+					JOptionPane.showMessageDialog(GrupaArtikalaForm.this, "Morate selektovati red u koloni!");
+			}
+		});
 		toolBar.add(btnPickup);
 
 
@@ -202,7 +215,7 @@ public class GrupaArtikalaForm extends JDialog {
 	      add(scrollPane, "wrap, grow");
 
 	      // Kreiranje TableModel-a, parametri: header-i kolona i broj redova 
-	      tableModel = new GrupaArtikalaTableModel(new String[] {"Sifra",   "Naziv grupe"}, 0);
+	      tableModel = new GrupaArtikalaTableModel(new String[] {"ID",   "Naziv grupe"}, 0);
 	      tblGrid.setModel(tableModel);
 	      
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -277,7 +290,6 @@ public class GrupaArtikalaForm extends JDialog {
 				
 					mode=MODE_EDIT;
 					tfId.setEditable(false);
-					tblGrid.setRowSelectionInterval(0, 0);
 				}
 			}
 		});

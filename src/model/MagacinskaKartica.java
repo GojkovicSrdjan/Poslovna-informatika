@@ -8,11 +8,15 @@ public class MagacinskaKartica {
 	Double vrednostUlaza;
 	Integer kolicinaIzlaza;
 	Double vrednostIzlaza;
-	Double pocetnoStanje;
+	Double pocetnaVrednost;
+	Integer pocetnaKolicina;
 	Double ukupnoStanje;
 	Integer poslovnaGodinaID;
 	Integer artikalID;
 	Integer magacinID;
+	Double zadnjaNabavnaCena;
+	Double maloprodajnaCena;
+	Double zadnjaProdajnaCena;
 	
 	public MagacinskaKartica() {
 		super();
@@ -67,14 +71,6 @@ public class MagacinskaKartica {
 		this.vrednostIzlaza = vrednostIzlaza;
 	}
 
-	public Double getPocetnoStanje() {
-		return pocetnoStanje;
-	}
-
-	public void setPocetnoStanje(Double pocetnoStanje) {
-		this.pocetnoStanje = pocetnoStanje;
-	}
-
 	public Double getUkupnoStanje() {
 		return ukupnoStanje;
 	}
@@ -105,6 +101,46 @@ public class MagacinskaKartica {
 
 	public void setMagacinID(Integer magacinID) {
 		this.magacinID = magacinID;
+	}
+
+	public Double getPocetnaVrednost() {
+		return pocetnaVrednost;
+	}
+
+	public void setPocetnaVrednost(Double pocetnaVrednost) {
+		this.pocetnaVrednost = pocetnaVrednost;
+	}
+
+	public Integer getPocetnaKolicina() {
+		return pocetnaKolicina;
+	}
+
+	public void setPocetnaKolicina(Integer pocetnaKolicina) {
+		this.pocetnaKolicina = pocetnaKolicina;
+	}
+
+	public Double getZadnjaNabavnaCena() {
+		return zadnjaNabavnaCena;
+	}
+
+	public void setZadnjaNabavnaCena(Double zadnjaNabavnaCena) {
+		this.zadnjaNabavnaCena = zadnjaNabavnaCena;
+	}
+
+	public Double getMaloprodajnaCena() {
+		return maloprodajnaCena;
+	}
+
+	public void setMaloprodajnaCena(Double maloprodajnaCena) {
+		this.maloprodajnaCena = maloprodajnaCena;
+	}
+
+	public Double getZadnjaProdajnaCena() {
+		return zadnjaProdajnaCena;
+	}
+
+	public void setZadnjaProdajnaCena(Double zadnjaProdajnaCena) {
+		this.zadnjaProdajnaCena = zadnjaProdajnaCena;
 	}
 	
 	

@@ -21,7 +21,6 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 	
 	  private String basicQuery = "SELECT ga_id, nazivGrupe FROM [Grupa artikala]";
 	  private String orderBy = " ORDER BY ga_id";
-	  private String whereStmt = "";
 
 	public GrupaArtikalaTableModel(Object[] colName, int rowCount){
 		super(colName, rowCount);
@@ -42,7 +41,7 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 	  } 
 	
 	  public void open() throws SQLException {
-		    fillData(basicQuery + whereStmt + orderBy);
+		    fillData(basicQuery + orderBy);
 		  }
 	  
 	  private void checkRow(int index) throws SQLException {
@@ -87,10 +86,10 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 		}
 	  
 		 public void deleteRow(int index, String id) throws SQLException {
-			 checkRow(index);
+			 //checkRow(index);
 			    PreparedStatement stmt = DBConnection.getConnection().prepareStatement(
 			        "DELETE FROM [Grupa artikala] where ga_id=?");
-			    String sifra = (String)getValueAt(index, 0);
+//			    String sifra = (String)getValueAt(index, 0);
 			    stmt.setInt(1, Integer.parseInt(id));
 			    //Brisanje iz baze 
 			    int rowsAffected = stmt.executeUpdate();
@@ -121,7 +120,7 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 			    fireTableDataChanged();
 		 }
 		 
-		 public int editRow(GrupaArtikala ga ,int index) throws SQLException{
+		 public int editRow(GrupaArtikala ga, int index) throws SQLException{
 			 int retVal = 0;
 			 PreparedStatement stmt= DBConnection.getConnection().prepareStatement("UPDATE [Grupa artikala] set nazivGrupe=? where ga_id=?");
 			 stmt.setString(1, ga.getNazivGrupe());
@@ -171,7 +170,7 @@ public class GrupaArtikalaTableModel extends DefaultTableModel {
 			    //Unos sloga u bazu
 			    DBConnection.getConnection().commit();
 			    if (rowsAffected > 0) {
-			      fillData(basicQuery + whereStmt + orderBy);
+			      fillData(basicQuery + orderBy);
 			      fireTableDataChanged();
 			    }
 			    return retVal;

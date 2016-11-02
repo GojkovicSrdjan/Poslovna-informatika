@@ -15,6 +15,7 @@ public class AnalitikaMagacinskeKartice {
 	String tipPromene;
 	Integer magacinskaKarticaID;
 	Integer stavkaPrometnogDokID;
+	String smer;
 	
 	public AnalitikaMagacinskeKartice() {
 		super();
@@ -85,5 +86,11 @@ public class AnalitikaMagacinskeKartice {
 	}
 	public void setStavkaPrometnogDokID(Integer stavkaPrometnogDokID) {
 		this.stavkaPrometnogDokID = stavkaPrometnogDokID;
+	}
+	public String getSmer() {
+		return smer;
+	}
+	public void setSmer(String smer) {
+		this.smer = smer;
 	}
 }

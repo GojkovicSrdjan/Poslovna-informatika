@@ -1,19 +1,30 @@
 package form;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.UIManager;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 
 import actions.AddAction;
 import actions.DeleteAction;
@@ -26,44 +37,499 @@ import actions.PickupAction;
 import actions.PreviousAction;
 import actions.RefreshAction;
 import actions.SearchAction;
-import net.miginfocom.swing.MigLayout;
+import model.Artikal;
+import model.Magacin;
+import model.MagacinskaKartica;
+import model.Sektor;
+import tableModel.MagacinskaKarticaTableModel;
 
 public class MagacinskaKarticaForm extends JDialog {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-
+	public static JTable table;
+	public static boolean PopunnjavaneStavke = false;
+	public static JTextField txtIznos;
+	public static JTextField txtPorez;
+	public static JTextField txtRabat;
+	public static JTextField txtUkupno;
+	public JTextField artikalTextField;
+	public JTextField magacinTextField;
+	public JTextField sektorTextField;
+	public JTextField txtAMK;
+	public JTextField txtPosGod;
+	public JTextField txtDatumObracuna;
+	public JTextField txtSifraArtikla;
+	public JTextField txtPakovanje;
+	public JLabel pcLb, mpLb, zncLb, nazivStrankeLabelSUP, zpcLb, pskLb,
+	psvLb, pukLb, puvLb, pikLb, pivLb, ukkLb, ukvLb, unLb, ukLb, uvLb, rkLb, vpZKCLb,
+	magacinLabel, sektorLabel, artikalLabel;
+	public JTextField txtPozivNaBroj, pcTf, mpTf, pskTf, psvTf, pukTf, puvTf,
+	pikTf, pivTf, ukkTf, ukvTf, unTf, ukTf, uvTf, rkTf, vpZKCTf,
+	zncTf, nazivStrankeTextFieldSUP, zpcTf;
+	public JButton commit,sektorButton, magacinButton, artikalButton;
 	
+	private MagacinskaKarticaTableModel tableModel=new MagacinskaKarticaTableModel();
 	private JButton btnAdd, btnCommit, btnDelete, btnFirst, btnLast, btnHelp, btnNext, btnNextForm,
 	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious;
 	private JToolBar toolBar;
-	private JSeparator separator_3;
-	private JLabel lblPoslovnaGod;
-	private JTextField poslovnaGod;
-	private JTextField prosecnaCena;
-	private JTextField pocetnaKolicina;
-	private JTextField pocetnaVrednost;
-	private JTextField kolicinaUlaza;
-	private JTextField vrednostUlaza;
-	private JTextField kolicinaIzlaza;
-	private JTextField vrednostIzlaza;
-	private JTextField ukupnaKolicina;
-	private JTextField textField_9;
-	private JTextField ukupnaVrednost;
-	private JTextField textField_11;
+	public String currentSektor, currentMagacin, currentArtikal;
+	public MagacinskaKartica mk;
 	
 	public MagacinskaKarticaForm(){
-		setLayout(new MigLayout("fill"));
-		setTitle("Magacinska kartica");
-		setSize(new Dimension(900,500));
+		setSize(700, 650);
+		setTitle("Analitika magacinske kartice");
 		setModal(true);
-		setLocationRelativeTo(MainForm.getInstance());
+		setLocationRelativeTo(null);
 		initToolbar();
-		init();
+		initContentPanel();
 	}
 	
+	private void initContentPanel(){
+		JPanel contentPanel, leftContentPanel1, leftContentPanel2, leftContentPanel3,
+			leftContentPanel4, rightContentPanel, cenaPanel, kolVredPanel;
+		Box leftVertBox, rightVertBox, lokUProHorBox, lokUProHorBox1, lokUProHorBox2,
+			strUProHorBox, Box2, Box3, Box4, Box5, Box6, Box7, Box8;
+		
+		
+		contentPanel = new JPanel();
+		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
+		{
+			//START Left Vertical Box
+			leftVertBox = new Box(BoxLayout.Y_AXIS);
+			{
+				//START Left Content Panel 1
+				leftContentPanel1 = new JPanel();
+				leftContentPanel1.setLayout(new FlowLayout(FlowLayout.CENTER));
+				{
+					JSeparator separator = new JSeparator();
+					
+					leftContentPanel1.add(separator);
+					
+					//Sektor
+					sektorLabel = new JLabel();
+					sektorLabel.setText("Sektor:");
+					
+					sektorTextField = new JTextField(5);
+					sektorTextField.setEditable(false);
+					
+					sektorButton = new JButton("...");
+					sektorButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							SektorForm sf=new SektorForm();
+							
+							sf.setVisible(true);
+							try{
+								Sektor s=sf.getSektor();
+								currentSektor=s.getId().toString();
+								sektorTextField.setText(s.getNaziv());
+							}catch(NullPointerException e1){
+								
+							}
+							
+						}
+					});
+					
+					leftContentPanel1.add(sektorLabel);
+					sektorButton.setSize(18, 20);
+					sektorButton.setPreferredSize(sektorButton.getSize());
+					sektorButton.setMaximumSize(sektorButton.getSize());					
+					
+					sektorLabel.setLabelFor(sektorTextField);
+					leftContentPanel1.add(sektorTextField);
+					leftContentPanel1.add(sektorButton);
+					
+					JSeparator separator1 = new JSeparator();
+					leftContentPanel1.add(separator1);
+					
+					//Magacin
+					magacinLabel = new JLabel();
+					magacinTextField = new JTextField(5);
+					leftContentPanel1.add(magacinLabel);
+					magacinButton = new JButton("...");
+					magacinTextField.setEditable(false);
+					
+					magacinButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							MagacinForm mf= new MagacinForm(currentSektor);
+							
+							mf.setVisible(true);
+							try{
+								Magacin m=mf.magacin;
+								currentMagacin=m.getId().toString();
+								magacinTextField.setText(m.getNaziv());
+								
+							}catch(NullPointerException e1){
+								
+							}
+						}
+					});
+					
+					magacinButton.setSize(18, 20);
+					magacinButton.setPreferredSize(magacinButton.getSize());
+					magacinButton.setMaximumSize(magacinButton.getSize());
+
+					
+					magacinLabel.setText("Magacin:");
+					magacinLabel.setLabelFor(magacinTextField);
+					leftContentPanel1.add(magacinTextField);
+					leftContentPanel1.add(magacinButton);
+					
+					JSeparator separator2 = new JSeparator();
+					leftContentPanel1.add(separator2);
+
+					//Artikal
+					artikalLabel = new JLabel();
+					artikalTextField = new JTextField(5);
+					leftContentPanel1.add(artikalLabel);
+					artikalTextField.setEditable(false);
+					
+					artikalButton = new JButton("...");
+					artikalButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							ArtikalForm af=new ArtikalForm(currentMagacin);				
+							af.setVisible(true);
+							
+							try {
+								Artikal a=af.artikal;
+								artikalTextField.setText(a.getNaziv());
+								currentArtikal=a.getId().toString();
+								mk=tableModel.openAsChild(currentArtikal);
+								fill();
+							} catch (NullPointerException e2) {
+								
+							}
+							
+						}
+					});
+					
+					artikalButton.setSize(18, 20);
+					artikalButton.setPreferredSize(artikalButton.getSize());
+					artikalButton.setMaximumSize(artikalButton.getSize());
+					
+					artikalLabel.setText("Artikal:");
+					artikalLabel.setLabelFor(artikalTextField);
+					leftContentPanel1.add(artikalTextField);
+					leftContentPanel1.add(artikalButton);
+					//Poslovna godina
+					
+				}
+				leftVertBox.add(leftContentPanel1);
+				//END Left Content Panel 2
+				
+				//START Left Content Panel 3
+				leftContentPanel3 = new JPanel();
+				leftContentPanel3.setLayout(new FlowLayout(FlowLayout.CENTER));
+				{
+					//Start Lokacija U Prometu Panel
+					cenaPanel = new JPanel();
+					cenaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+					cenaPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Cene:", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+					cenaPanel.setName("Cene:");
+					{
+						//START LokUProHorBox1
+						lokUProHorBox = new Box(BoxLayout.Y_AXIS);
+						{
+							//START LokUProHorBox1
+							lokUProHorBox1 = new Box(BoxLayout.X_AXIS);
+							{
+								JPanel lokUProSubPanel1 = new JPanel();
+								lokUProSubPanel1.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{									
+									lokUProSubPanel1.add(Box.createHorizontalStrut(5));
+									//Kalkulisana cena
+									pcLb = new JLabel();
+									pcLb.setText("Prosecna cena:");
+									pcTf = new JTextField(10);
+									
+									Component horizontalStrut = Box.createHorizontalStrut(20);
+									lokUProSubPanel1.add(horizontalStrut);
+									
+									lokUProSubPanel1.add(pcLb);
+									pcLb.setLabelFor(pcTf);
+									lokUProSubPanel1.add(pcTf);
+									
+									lokUProSubPanel1.add(Box.createHorizontalStrut(100));
+									
+								}
+								lokUProHorBox1.add(lokUProSubPanel1);
+								//Maloprodajna cena
+								mpLb = new JLabel();
+								lokUProSubPanel1.add(mpLb);
+								//
+								mpLb.setText("Maloprodajna cena:");
+								mpTf = new JTextField(10);
+								lokUProSubPanel1.add(mpTf);
+								mpLb.setLabelFor(mpTf);
+								
+								
+							}
+							lokUProHorBox.add(lokUProHorBox1);
+							//END LokUProHorBox1
+							
+							//Start LokUProHorBox2
+							lokUProHorBox2 = new Box(BoxLayout.X_AXIS);
+							{
+								JPanel lokUProSubPanel2 = new JPanel();
+								lokUProSubPanel2.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{
+									
+									//Zadnja nabavna cena
+									zncLb = new JLabel();
+									zncTf = new JTextField(10);
+									lokUProSubPanel2.add(zncLb);
+									//
+									zncLb.setText("Zadnja nabavna cena:");
+									zncLb.setLabelFor(zncTf);
+									lokUProSubPanel2.add(zncTf);
+									lokUProSubPanel2.add(Box.createHorizontalStrut(80));
+									
+									
+									//Zadnja prodajna cena
+									zpcLb=new JLabel("Zadnja prodajana cena:");
+									zpcTf=new JTextField(10);
+									lokUProSubPanel2.add(zpcLb);
+									lokUProSubPanel2.add(zpcTf);
+								}
+								lokUProHorBox2.add(lokUProSubPanel2);
+							}
+							lokUProHorBox.add(lokUProHorBox2);
+							//END LokUProHorBox2
+						}
+						cenaPanel.add(lokUProHorBox);
+						//END LokUProHorBox
+					}
+					leftContentPanel3.add(cenaPanel);
+					//END Lokacija U Prometu Panel
+				}
+				leftVertBox.add(leftContentPanel3);
+				//END Left Content Panel 3
+				
+				//START Left Content Panel 4
+				leftContentPanel4 = new JPanel();
+				leftContentPanel4.setLayout(new FlowLayout(FlowLayout.CENTER));
+				{
+					
+					kolVredPanel = new JPanel();
+					kolVredPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
+					kolVredPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+					{
+						//START strUProHorBox1
+						strUProHorBox = new Box(BoxLayout.Y_AXIS);
+						{
+							//END strUProHorBox1
+							
+							//Start strUProHorBox2
+							Box2 = new Box(BoxLayout.X_AXIS);
+							{
+								JPanel subPanel2=new JPanel();
+								subPanel2.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{
+
+									//Pocetno stanje kolicinski
+									pskLb=new JLabel("Pocetno stanje kolicinski:");
+									pskTf=new JTextField(10);
+									subPanel2.add(pskLb);
+									subPanel2.add(pskTf);
+									
+									subPanel2.add(Box.createHorizontalStrut(65));
+									
+									//Pocetno stanje vrednosno
+									psvLb=new JLabel("Pocetno stanje vrednosno:");
+									psvTf=new JTextField(10);
+									subPanel2.add(psvLb);
+									subPanel2.add(psvTf);
+								}
+								Box2.add(subPanel2);
+								
+							}
+							strUProHorBox.add(Box2);
+							//END strUProHorBox2
+							
+							//Start strUProHorBox3
+							Box3 = new Box(BoxLayout.X_AXIS);
+							{
+								JPanel subPanel3 = new JPanel();
+								subPanel3.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{
+									
+									//Promet ulaza kolicninski
+									pukLb = new JLabel("Promet ulaza kolicninski:");
+									pukTf = new JTextField(10);
+									
+									JSeparator separator = new JSeparator();
+									subPanel3.add(separator);
+									subPanel3.add(pukLb);
+									subPanel3.add(pukTf);
+									
+									subPanel3.add(Box.createHorizontalStrut(75));
+									
+									//Promet ulaza vrednosno
+									puvLb=new JLabel("Promet ulaza vrednosno:");
+									puvTf=new JTextField(10);
+									subPanel3.add(puvLb);
+									subPanel3.add(puvTf);
+									
+								}
+								Box3.add(subPanel3);
+							}
+							strUProHorBox.add(Box3);
+							//END strUProHorBox3
+							
+							
+							//Start box4
+							Box4=new Box(BoxLayout.X_AXIS);
+							{
+								JPanel subPanel4=new JPanel();
+								subPanel4.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{
+									//Promet izlaza kolicinski
+									pikLb=new JLabel("Promet izlaza kolicinski:");
+									pikTf=new JTextField(10);
+									
+									Component horizontalStrut = Box.createHorizontalStrut(6);
+									subPanel4.add(horizontalStrut);
+									subPanel4.add(pikLb);
+									subPanel4.add(pikTf);
+									
+									subPanel4.add(Box.createHorizontalStrut(73));
+									
+									//Promet izlaza vrednosno
+									pivLb=new JLabel("Promet izlaza vrednosno:");
+									pivTf=new JTextField(10);
+									subPanel4.add(pivLb);
+									subPanel4.add(pivTf);
+									
+								}
+								Box4.add(subPanel4);
+							}
+							strUProHorBox.add(Box4);
+							//End box4
+							
+							
+							//Start box5
+							Box5=new Box(BoxLayout.X_AXIS);
+							{
+								JPanel subPanel5=new JPanel();
+								subPanel5.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{
+									
+									//Ukupna korekcija kolicine
+									ukkLb=new JLabel("Ukupna korekcija kolicine:");
+									ukkTf=new JTextField(10);
+									subPanel5.add(ukkLb);
+									subPanel5.add(ukkTf);
+									
+									subPanel5.add(Box.createHorizontalStrut(50));
+									
+									//Ukupna korigovana vrednost
+									ukvLb=new JLabel("Ukupna korigovana vrednost:");
+									ukvTf=new JTextField(10);
+									subPanel5.add(ukvLb);
+									subPanel5.add(ukvTf);
+									
+									
+								}
+								Box5.add(subPanel5);
+							}
+							strUProHorBox.add(Box5);
+							//End box5
+							
+							
+							
+							//Start box6
+							Box6=new Box(BoxLayout.X_AXIS);
+							{
+								JPanel subPanel6=new JPanel();
+								subPanel6.setLayout(new FlowLayout(FlowLayout.LEFT));
+								{
+									subPanel6.add(Box.createHorizontalStrut(42));
+									
+									//Ukupna nivelacija
+									unLb=new JLabel("Ukupna nivelacija:");
+									unTf=new JTextField(10);
+									subPanel6.add(unLb);
+									subPanel6.add(unTf);
+									
+								}
+								Box6.add(subPanel6);
+							}
+							
+							strUProHorBox.add(Box6);
+							//End box4
+							
+							
+							
+						}
+						kolVredPanel.add(strUProHorBox);
+						//END strUProHorBox
+						
+					}
+					leftContentPanel4.add(kolVredPanel);
+					//END Stranka U Prometu Panel
+					
+					
+				}
+				leftVertBox.add(leftContentPanel4);
+				//END Left Content Panel 1
+				
+				//START Left Content Panel 2
+				leftContentPanel2 = new JPanel();
+				
+				leftContentPanel2.setLayout(new FlowLayout(FlowLayout.LEFT));
+				{
+					leftContentPanel2.add(Box.createVerticalStrut(80));
+					Box sb=new Box(BoxLayout.Y_AXIS);
+					{
+					//Start box7
+					Box7=new Box(BoxLayout.X_AXIS);
+					{
+						JPanel subPanel7=new JPanel();
+						subPanel7.setLayout(new FlowLayout(FlowLayout.LEFT));
+						
+						//Ukupna kolicina
+						ukLb=new JLabel("Ukupna kolicina:");
+						ukTf=new JTextField(10);
+						
+						Component horizontalStrut = Box.createHorizontalStrut(45);
+						subPanel7.add(horizontalStrut);
+						subPanel7.add(ukLb);
+						subPanel7.add(ukTf);
+						
+						subPanel7.add(Box.createHorizontalStrut(117));
+						
+						//Ukupna vrednost
+						uvLb=new JLabel("Ukupna vrednost:");
+						uvTf=new JTextField(10);
+						subPanel7.add(uvLb);
+						subPanel7.add(uvTf);
+						
+						Box7.add(subPanel7);
+					}
+					
+					sb.add(Box7);
+					//End box7
+					
+					//End box8
+					}
+					leftContentPanel2.add(sb);
+					
+				}
+				leftContentPanel4.add(leftContentPanel2);
+				//END Left Content Panel 4
+			}
+			add(leftVertBox);
+			//END Left Vertical Box
+			
+			
+		}	
+	}
+
 	
 	private void initToolbar(){
 
@@ -150,7 +616,9 @@ public class MagacinskaKarticaForm extends JDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				AMKForm amk=new AMKForm();
+				AMKForm amk=new AMKForm(sektorTextField.getText().trim(), currentSektor,
+						magacinTextField.getText().trim(), currentMagacin,
+						artikalTextField.getText().trim(), currentArtikal);
 				setVisible(false);
 				amk.setVisible(true);
 				amk.setVisible(false);
@@ -159,282 +627,32 @@ public class MagacinskaKarticaForm extends JDialog {
 			}
 		});
 
-		add(toolBar, "dock north");
+		add(toolBar, BorderLayout.NORTH);
 	}
 	
-	
-	private void init(){
-JLabel lblNewLabel = new JLabel("Magacin");
+	public void fill(){
+		pcTf.setText(mk.getProsecnaCena().toString());
+		pskTf.setText(mk.getPocetnaKolicina().toString());
+		psvTf.setText(mk.getPocetnaVrednost().toString());
+		pukTf.setText(mk.getKolicinaUlaza().toString());
+		puvTf.setText(mk.getVrednostUlaza().toString());
+		pikTf.setText(mk.getKolicinaIzlaza().toString());
+		pivTf.setText(mk.getVrednostIzlaza().toString());
+		mpTf.setText(mk.getMaloprodajnaCena().toString());
+		zncTf.setText(mk.getZadnjaNabavnaCena().toString());
+		zpcTf.setText(mk.getZadnjaProdajnaCena().toString());
+		Integer uk=mk.getPocetnaKolicina()+mk.getKolicinaUlaza()-mk.getKolicinaIzlaza();
+		ukTf.setText(uk.toString());
+		Double uv=mk.getPocetnaVrednost()+mk.getVrednostUlaza()-mk.getVrednostIzlaza();
+		uvTf.setText(uv.toString());
+		Double nivelacija= uk* mk.getProsecnaCena()-uv;
+		unTf.setText(nivelacija.toString());
+		Integer ukk=mk.getKolicinaUlaza()-mk.getKolicinaIzlaza();
+		ukkTf.setText(ukk.toString());
+		Double ukv=mk.getVrednostUlaza()-mk.getVrednostIzlaza();
+		ukvTf.setText(ukv.toString());
 		
-		JSeparator separator = new JSeparator();
-		
-		JLabel lblNewLabel_1 = new JLabel("Sektor");
-		
-		JComboBox sektor = new JComboBox();
-		
-		JLabel lblNewLabel_2 = new JLabel("Magacin");
-		
-		JComboBox magacin = new JComboBox();
-		
-		JSeparator separator_1 = new JSeparator();
-		
-		JLabel lblNewLabel_3 = new JLabel("Artikal");
-		
-		JSeparator separator_2 = new JSeparator();
-		
-		separator_3 = new JSeparator();
-		
-		lblPoslovnaGod = new JLabel("Poslovna god.");
-		
-		poslovnaGod = new JTextField();
-		poslovnaGod.setColumns(10);
-		
-		JLabel lblNewLabel_4 = new JLabel("Naziv artikla");
-		
-		JComboBox comboBox_2 = new JComboBox();
-		
-		JLabel lblNewLabel_5 = new JLabel("Pakovanje");
-		
-		JComboBox comboBox_3 = new JComboBox();
-		
-		JLabel lblProsecnaCena = new JLabel("Prosecna cena");
-		
-		prosecnaCena = new JTextField();
-		prosecnaCena.setColumns(10);
-		
-		JSeparator separator_4 = new JSeparator();
-		
-		JLabel lblNewLabel_6 = new JLabel("Pocetna kolicina");
-		
-		pocetnaKolicina = new JTextField();
-		pocetnaKolicina.setColumns(10);
-		
-		JLabel text2 = new JLabel("Pocetna vrednost");
-		
-		pocetnaVrednost = new JTextField();
-		pocetnaVrednost.setColumns(10);
-		
-		JLabel text3 = new JLabel("Kolicina ulaza");
-		
-		kolicinaUlaza = new JTextField();
-		kolicinaUlaza.setColumns(10);
-		
-		JLabel text4 = new JLabel("Vrednost ulaza");
-		
-		vrednostUlaza = new JTextField();
-		vrednostUlaza.setColumns(10);
-		
-		JLabel text1 = new JLabel("Kolicina izlaza");
-		
-		kolicinaIzlaza = new JTextField();
-		kolicinaIzlaza.setColumns(10);
-		
-		JLabel text = new JLabel("Vrednost izlaza");
-		
-		vrednostIzlaza = new JTextField();
-		vrednostIzlaza.setColumns(10);
-		
-		JSeparator separator_5 = new JSeparator();
-		
-		JLabel lblNewLabel_9 = new JLabel("Ukupna kolicina");
-		
-		JLabel lblRezervisanaKolicina = new JLabel("Rezervisana kolicina");
-		
-		JLabel lblUkupnaVrednost = new JLabel("Ukupna vrednost");
-		
-		JLabel lblVrednostPoZkc = new JLabel("Vrednost po ZKC");
-		
-		ukupnaKolicina = new JTextField();
-		ukupnaKolicina.setColumns(10);
-		
-		textField_9 = new JTextField();
-		textField_9.setColumns(10);
-		
-		ukupnaVrednost = new JTextField();
-		ukupnaVrednost.setColumns(10);
-		
-		textField_11 = new JTextField();
-		textField_11.setColumns(10);
-		GroupLayout groupLayout = new GroupLayout(getContentPane());
-		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.TRAILING)
-				.addGroup(groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(38)
-							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-								.addComponent(separator_5, GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
-								.addGroup(groupLayout.createSequentialGroup()
-									.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-										.addComponent(lblNewLabel_9)
-										.addComponent(lblRezervisanaKolicina))
-									.addPreferredGap(ComponentPlacement.UNRELATED)
-									.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-										.addComponent(textField_9, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-										.addComponent(ukupnaKolicina, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-									.addGap(51)
-									.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(lblVrednostPoZkc)
-											.addPreferredGap(ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
-											.addComponent(textField_11, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(lblUkupnaVrednost)
-											.addPreferredGap(ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
-											.addComponent(ukupnaVrednost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))))))
-						.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-							.addGap(101)
-							.addComponent(lblNewLabel_1)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(sektor, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-							.addGap(18)
-							.addComponent(lblNewLabel_2)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(magacin, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-							.addGap(18)
-							.addComponent(lblPoslovnaGod)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(poslovnaGod, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE))
-						.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-							.addGap(47)
-							.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-								.addGroup(groupLayout.createSequentialGroup()
-									.addComponent(separator_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-									.addPreferredGap(ComponentPlacement.RELATED)
-									.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-										.addComponent(separator_3, GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(lblNewLabel_3)
-											.addPreferredGap(ComponentPlacement.UNRELATED)
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-												.addComponent(separator_2, GroupLayout.DEFAULT_SIZE, 381, Short.MAX_VALUE)
-												.addGroup(groupLayout.createSequentialGroup()
-													.addGap(10)
-													.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-														.addGroup(groupLayout.createSequentialGroup()
-															.addComponent(lblProsecnaCena)
-															.addGap(31)
-															.addComponent(prosecnaCena))
-														.addGroup(groupLayout.createSequentialGroup()
-															.addComponent(lblNewLabel_4)
-															.addPreferredGap(ComponentPlacement.UNRELATED)
-															.addComponent(comboBox_2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-															.addGap(26)
-															.addComponent(lblNewLabel_5)
-															.addPreferredGap(ComponentPlacement.UNRELATED)
-															.addComponent(comboBox_3, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))))))
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(lblNewLabel)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(separator, GroupLayout.PREFERRED_SIZE, 378, GroupLayout.PREFERRED_SIZE))))
-								.addComponent(separator_4, GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
-								.addGroup(groupLayout.createSequentialGroup()
-									.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(lblNewLabel_6)
-											.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-											.addComponent(pocetnaKolicina, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(text3)
-											.addGap(29)
-											.addComponent(kolicinaUlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(text1)
-											.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-											.addComponent(kolicinaIzlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-									.addPreferredGap(ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
-									.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(groupLayout.createSequentialGroup()
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-												.addComponent(text4, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-												.addComponent(text2, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-											.addGap(18)
-											.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-												.addComponent(vrednostUlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-												.addComponent(pocetnaVrednost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-										.addGroup(groupLayout.createSequentialGroup()
-											.addComponent(text, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE)
-											.addGap(18)
-											.addComponent(vrednostIzlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))))))
-					.addGap(181))
-				.addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-					.addComponent(toolBar, GroupLayout.PREFERRED_SIZE, 524, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(131, Short.MAX_VALUE))
-		);
-		groupLayout.setVerticalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(groupLayout.createSequentialGroup()
-					.addComponent(toolBar, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-					.addGap(26)
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(lblNewLabel)
-						.addComponent(separator, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(20)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblNewLabel_1)
-						.addComponent(sektor, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblNewLabel_2)
-						.addComponent(magacin, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblPoslovnaGod)
-						.addComponent(poslovnaGod, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(separator_1, GroupLayout.PREFERRED_SIZE, 14, GroupLayout.PREFERRED_SIZE)
-						.addComponent(separator_3, GroupLayout.PREFERRED_SIZE, 9, GroupLayout.PREFERRED_SIZE))
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(18)
-							.addComponent(lblNewLabel_3, GroupLayout.PREFERRED_SIZE, 14, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(27)
-							.addComponent(separator_2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblNewLabel_4)
-						.addComponent(comboBox_2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblNewLabel_5)
-						.addComponent(comboBox_3, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(18)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblProsecnaCena)
-						.addComponent(prosecnaCena, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(separator_4, GroupLayout.PREFERRED_SIZE, 14, GroupLayout.PREFERRED_SIZE)
-					.addGap(18)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblNewLabel_6)
-						.addComponent(pocetnaVrednost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(text2)
-						.addComponent(pocetnaKolicina, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(18)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(text3)
-						.addComponent(text4)
-						.addComponent(vrednostUlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(kolicinaUlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(18)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(text1)
-						.addComponent(text)
-						.addComponent(vrednostIzlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(kolicinaIzlaza, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(separator_5, GroupLayout.PREFERRED_SIZE, 14, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblNewLabel_9)
-						.addComponent(ukupnaKolicina, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblUkupnaVrednost)
-						.addComponent(ukupnaVrednost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(26)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblRezervisanaKolicina)
-						.addComponent(textField_9, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblVrednostPoZkc)
-						.addComponent(textField_11, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(42))
-		);
-		getContentPane().setLayout(groupLayout);
 	}
+	
 	
 }

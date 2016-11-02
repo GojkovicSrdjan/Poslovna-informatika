@@ -238,7 +238,7 @@ drop table if exists "Vrsta dokumenta";*/
 /*==============================================================*/
 create table "Analitika magacinske kartice" 
 (
-   "stavka prometnog dok" numeric                      null,
+   "stavka prometnog dok" numeric                      not null,
    rbr                  numeric                        null,
    datumPromene         date                           null,
    vrDok                date                           null,
@@ -247,7 +247,8 @@ create table "Analitika magacinske kartice"
    cena                 decimal                        null,
    vrednost             decimal                        null,
    amk_id               numeric   identity                     not null,
-   "magacinska kartica" numeric                        null,
+   smer					text							null,
+   "magacinska kartica" numeric                        not null,
    "tip promene"        numeric                        not null,
    constraint "PK_ANALITIKA MAGACINSKE KARTIC" primary key clustered (amk_id)
 );
@@ -285,7 +286,7 @@ create table Artikal
    naziv                text                   null,
    artikal_id           numeric   identity                     not null,
    opis                 text                        null,
-   "grupa artikala"     numeric                        null,
+   "grupa artikala"     numeric                       not null,
    "stavke popisa"      numeric                        null,
    constraint PK_ARTIKAL primary key clustered (artikal_id)
 );
@@ -329,7 +330,7 @@ radnik ASC,
 create table "Grupa artikala" 
 (
    ga_id                numeric    identity                    not null,
-   nazivGrupe           text                   null,
+   nazivGrupe           text                   not null,
    constraint "PK_GRUPA ARTIKALA" primary key clustered (ga_id)
 );
 
@@ -338,7 +339,7 @@ create table "Grupa artikala"
 /*==============================================================*/
 create table Magacin 
 (
-   sektor               numeric                        null,
+   sektor               numeric                       not null,
    naziv                text                  null,
    magacin_id           numeric   identity                     not null,
    "prometni dokument"  numeric                        null,
@@ -357,16 +358,20 @@ magacin_id ASC
 /*==============================================================*/
 create table "Magacinska kartica" 
 (
-   magacin              numeric                        null,
+   magacin              numeric                       not null,
    "prosecna cena"      money                          null,
+   "zadnja nabavna cena" money							null,
+   "maloprodajna cena"	money							null,
+   "zadnja prodajna cena" money							null,
    "kolicina ulaza"     numeric                        null,
    "vrednost ulaza"     money                          null,
    "kolicina izlaza"    numeric                        null,
    "vrednost izlaza"    money                          null,
    mk_id                numeric   identity                     not null,
-   "poslovna godina"    numeric                        null,
-   artikal              numeric                        null,
-   "pocetno stanje"     money                          null,
+   "poslovna godina"    numeric                        not null,
+   artikal              numeric                        not null,
+   "pocetna vrednost"   money                          null,
+   "pocetna kolicina"	numeric							null,
    "ukupno stanje"      money                          null,
    constraint "PK_MAGACINSKA KARTICA" primary key clustered (mk_id)
 );
@@ -459,7 +464,7 @@ create table "Poslovna godina"
 (
    pg_id                numeric identity                       not null,
    godina               numeric                        null,
-   PIB                  numeric                        null,
+   PIB                  numeric                       not null,
    constraint "PK_POSLOVNA GODINA" primary key clustered (pg_id)
 );
 
@@ -489,7 +494,7 @@ create table "Poslovni partner"
 create table Preduzece 
 (
    naziv                text                   null,
-   PIB                  numeric  identity                      not null,
+   PIB                  numeric                      not null,
    brTelefona           numeric                        null,
    adresa               text                   null,
    constraint PK_PREDUZECE primary key clustered (PIB)
