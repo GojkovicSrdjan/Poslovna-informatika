@@ -1,24 +1,16 @@
 package form;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
 import javax.swing.JToolBar;
-import javax.swing.UIManager;
-import javax.swing.border.TitledBorder;
 
 import actions.AddAction;
 import actions.DeleteAction;
@@ -31,8 +23,18 @@ import actions.PreviousAction;
 import actions.RefreshAction;
 import actions.SearchAction;
 import net.miginfocom.swing.MigLayout;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
 
-public class PrometniDokumentDialog extends JDialog {
+import javax.swing.JLabel;
+
+import javax.swing.BoxLayout;
+import javax.swing.border.TitledBorder;
+import javax.swing.UIManager;
+import java.awt.Color;
+import javax.swing.JRadioButton;
+
+public class PopisniDokumentDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
 	private JPanel contentPanel, leftContentPanel1, leftContentPanel2, leftContentPanel3,
@@ -55,12 +57,12 @@ public class PrometniDokumentDialog extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public PrometniDokumentDialog() {
+	public PopisniDokumentDialog() {
 		
 		getContentPane().setLayout(new MigLayout("fill"));
 
 		setSize(new Dimension(800, 500));
-		setTitle("Prometni dokument");
+		setTitle("Popisni dokument");
 		setLocationRelativeTo(MainForm.getInstance());
 		setModal(true);
 		
@@ -260,7 +262,7 @@ public class PrometniDokumentDialog extends JDialog {
 									magacinButton.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
-											MagacinForm mf = new MagacinForm(null);
+											MagacinForm mf = new MagacinForm();
 											setVisible(false);
 											mf.setVisible(true);
 											mf.setVisible(false);
@@ -360,11 +362,11 @@ public class PrometniDokumentDialog extends JDialog {
 									spoljniPartnerButtonSUP.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
-											MagacinForm mf = new MagacinForm(null);
+											/*MagacinForm mf = new MagacinForm();
 											setVisible(false);
 											mf.setVisible(true);
 											mf.setVisible(false);
-											setVisible(true);
+											setVisible(true);*/
 										}
 									});
 									spoljniPartnerButtonSUP.setSize(18, 20);
@@ -448,7 +450,7 @@ public class PrometniDokumentDialog extends JDialog {
 									magacinButtonSUP.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
-											MagacinForm mf = new MagacinForm(null);
+											MagacinForm mf = new MagacinForm();
 											setVisible(false);
 											mf.setVisible(true);
 											mf.setVisible(false);

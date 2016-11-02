@@ -52,29 +52,43 @@ public class MainForm extends JFrame {
 		JMenu preduzeceMenu=new JMenu("Preduzece");
 		JMenuItem podaciMI= new JMenuItem("Podaci o preduzecu");
 		
-		
-		JMenuItem magacinMenu=new JMenuItem("Magacin");
-		magacinMenu.addActionListener(new ActionListener() {
-			
+		JMenuItem magacinMI=new JMenuItem("Magacin");
+		magacinMI.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				MagacinskaKarticaForm mk=new MagacinskaKarticaForm();
-				
 				setVisible(false);
 				mk.setVisible(true);
 				mk.setVisible(false);
 				setVisible(true);
-				
 			}
 		});
-		preduzeceMenu.add(magacinMenu);
+		
+		JMenuItem poslovnaGodinaMenuItem = new JMenuItem("Poslovne godina");
+		poslovnaGodinaMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				PoslovnaGodinaDialog pgd = new PoslovnaGodinaDialog();
+				setVisible(false);
+				pgd .setVisible(true);
+				pgd .setVisible(false);
+				setVisible(true);
+			}
+		});
+		
+		preduzeceMenu.add(magacinMI);
 		preduzeceMenu.add(podaciMI);
+		preduzeceMenu.add(poslovnaGodinaMenuItem);
 		mb.add(preduzeceMenu);
 		//END Preduzece menu
+		
+		
 		
 		//Poslovni partner menu
 		JMenu ppMenu=new JMenu("Poslovni partneri");
 		mb.add(ppMenu);
+		
+		
 		
 		//Radnik menu
 		JMenu radnikMenu=new JMenu("Zaposleni");
@@ -82,7 +96,7 @@ public class MainForm extends JFrame {
 		radnikMenu.add(radnikMI);
 		mb.add(radnikMenu);
 		
-		//START Promet
+		//START Promet menu
 		JMenu prometMenu= new JMenu("Promet");
 		
 			JMenuItem prometniDokumetnMenuItem = new JMenuItem("Prometni dokument");
@@ -99,7 +113,28 @@ public class MainForm extends JFrame {
 			prometMenu.add(prometniDokumetnMenuItem);
 		
 		mb.add(prometMenu);
-		//END Prometni dokument
+		//END Promet menu
+		
+		//START Promet menu
+		JMenu popisMenu= new JMenu("Popis");
+		
+			JMenuItem popisniDokumetnMenuItem = new JMenuItem("Popisni dokument");
+			popisniDokumetnMenuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					PopisniDokumentDialog popisdd = new PopisniDokumentDialog();
+					setVisible(false);
+					popisdd .setVisible(true);
+					popisdd .setVisible(false);
+					setVisible(true);
+				}
+			});
+			popisMenu.add(popisniDokumetnMenuItem);
+		
+		mb.add(popisMenu);
+		//END Promet menu
+		
+		
 	}
 	
 	public static MainForm getInstance(){
