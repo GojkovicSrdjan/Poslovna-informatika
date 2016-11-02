@@ -48,7 +48,7 @@ public class MainForm extends JFrame {
 	private void Menu(){
 		mb=new JMenuBar();
 		
-		//Preduzece menu
+		//START Preduzece menu
 		JMenu preduzeceMenu=new JMenu("Preduzece");
 		JMenuItem podaciMI= new JMenuItem("Podaci o preduzecu");
 		
@@ -67,10 +67,10 @@ public class MainForm extends JFrame {
 				
 			}
 		});
-		
 		preduzeceMenu.add(magacinMenu);
 		preduzeceMenu.add(podaciMI);
 		mb.add(preduzeceMenu);
+		//END Preduzece menu
 		
 		//Poslovni partner menu
 		JMenu ppMenu=new JMenu("Poslovni partneri");
@@ -82,9 +82,24 @@ public class MainForm extends JFrame {
 		radnikMenu.add(radnikMI);
 		mb.add(radnikMenu);
 		
-		//Prometni dokument
-		JMenu pdMenu= new JMenu("Prometni dokument");
-		mb.add(pdMenu);
+		//START Promet
+		JMenu prometMenu= new JMenu("Promet");
+		
+			JMenuItem prometniDokumetnMenuItem = new JMenuItem("Prometni dokument");
+			prometniDokumetnMenuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					PrometniDokumentDialog pdd = new PrometniDokumentDialog();
+					setVisible(false);
+					pdd .setVisible(true);
+					pdd .setVisible(false);
+					setVisible(true);
+				}
+			});
+			prometMenu.add(prometniDokumetnMenuItem);
+		
+		mb.add(prometMenu);
+		//END Prometni dokument
 	}
 	
 	public static MainForm getInstance(){
