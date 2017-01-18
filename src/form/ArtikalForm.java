@@ -1,10 +1,16 @@
 package form;
 
+import java.awt.ComponentOrientation;
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -28,14 +34,20 @@ import actions.NextAction;
 import actions.NextFormAction;
 import actions.PickupAction;
 import actions.PreviousAction;
+import actions.PrintAction;
 import actions.RefreshAction;
 import actions.RollbackAction;
 import actions.SearchAction;
+import db.DBConnection;
 import model.Artikal;
 import model.GrupaArtikala;
-import model.Magacin;
 import net.miginfocom.swing.MigLayout;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
 import tableModel.ArtikalTableModel;
+import utils.Pomocni;
 
 public class ArtikalForm extends JDialog {
 
@@ -46,15 +58,18 @@ public class ArtikalForm extends JDialog {
 	
 	private JToolBar toolBar;
 	private JButton btnAdd, btnCommit, btnDelete, btnFirst, btnLast, btnHelp, btnNext, btnNextForm,
-	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious;
+	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious, btnReport;
 	private JTextField tfId = new JTextField(5);
-	private JTextField tfNaziv = new JTextField(15);
-	private JTextField tfOpis = new JTextField(15);
+	private JTextField tfCena = new JTextField(5);
+	private JTextField tfKolicina = new JTextField(5);
+	private JTextField tfNaziv = new JTextField(10);
 	private JTextField tfJedMere = new JTextField(7);
-	private JTextField tfPakovanje = new JTextField(15);
+	private JTextField tfPakovanje = new JTextField(10);
 	private JTextField tfGA = new JTextField(7);
 	private JTextField tfGAId = new JTextField();
+	private JTextField tfMagacin = new JTextField(7);
 	private JButton btnGA=new JButton("...");
+	private JButton btnMagacin=new JButton("...");
 	
 	private ArtikalTableModel tableModel;
 	private JTable tblGrid = new JTable(); 
@@ -64,11 +79,16 @@ public class ArtikalForm extends JDialog {
 	private static final int MODE_ADD=2;
 	private static final int MODE_SEARCH=3;
 	private int mode;
+	private String magacin, pg;
 	
-	public ArtikalForm(String parent) {
+	public ArtikalForm(String parent, String pib, String pg) {
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
+		magacin=parent;
+		this.pg=pg;
 		setLayout(new MigLayout("fill"));
 		setTitle("Artikal");
-		setSize(new Dimension(800, 600));
+		setIconImage(setImage());
+		setSize(new Dimension(1200, 600));
 		setModal(true);
 		initToolbar();
 		initTable();
@@ -78,9 +98,14 @@ public class ArtikalForm extends JDialog {
 		tfGA.setEditable(false);
 		tfId.setEditable(false);
 		tfGAId.setVisible(false);
+		tfCena.setEditable(false);
+		tfKolicina.setEditable(false);
+		tfMagacin.setEditable(false);
 		
 		if(parent!=null)
-			tableModel.openAsChild(parent);
+			tableModel.openAsChild(parent, pg);
+		else if(pib!=null)
+			tableModel.openWithPib(pib);
 		
 	}
 	
@@ -99,7 +124,6 @@ public class ArtikalForm extends JDialog {
 				tfGA.setText("");
 				tfJedMere.setText("");
 				tfPakovanje.setText("");
-				tfOpis.setText("");
 				tfId.requestFocusInWindow();
 				
 			}
@@ -107,8 +131,8 @@ public class ArtikalForm extends JDialog {
 		toolBar.add(btnSearch);
 
 
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
+//		btnRefresh = new JButton(new RefreshAction());
+//		toolBar.add(btnRefresh);
 
 		btnPickup = new JButton(new PickupAction(this));
 		btnPickup.addActionListener(new ActionListener() {
@@ -117,24 +141,63 @@ public class ArtikalForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				if(tblGrid.getSelectedRow()!=-1){
 					artikal=new Artikal();
-					artikal.setId(Integer.parseInt(tfId.getText().trim()));
-					artikal.setNaziv(tfNaziv.getText().trim());
-					artikal.setOpis(tfOpis.getText().trim());
-					artikal.setJedinicaMere(tfJedMere.getText().trim());
-					artikal.setPakovanje(tfPakovanje.getText().trim());
+					artikal.setId(Integer.parseInt((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 0)));
+					artikal.setNaziv(((String)tableModel.getValueAt(tblGrid.getSelectedRow(), 1)));
+					artikal.setJedinicaMere(((String)tableModel.getValueAt(tblGrid.getSelectedRow(), 2)));
+					artikal.setPakovanje(Double.parseDouble(((String)tableModel.getValueAt(tblGrid.getSelectedRow(), 3))));
 					setVisible(false);
 				}else
-					JOptionPane.showMessageDialog(ArtikalForm.this, "Morate selektovati red u koloni!");
+					JOptionPane.showMessageDialog(ArtikalForm.this, "Morate selektovati red u koloni!", "Obavestenje", JOptionPane.WARNING_MESSAGE);
 				
 			}
 		});
 		toolBar.add(btnPickup);
 
+//
+//		btnHelp = new JButton(new HelpAction());
+//		toolBar.add(btnHelp);
 
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
+		if(magacin!=null){
+			btnReport=new JButton(new PrintAction(this));
+			toolBar.add(btnReport);
+			btnReport.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Map<String, Object> params=new HashMap();
+					params.put("magacin_id", magacin);
+					params.put("pib", MainForm.getInstance().selectedPred.getPIB().toString());
+					params.put("pg", pg);
+					
+					try {
+						JasperPrint	jp = JasperFillManager
+								.fillReport(
+										getClass().getResource(
+												"/report/lagerLista.jasper")
+												.openStream(), params,
+										DBConnection.getConnection());
+						
+	
+						JasperViewer jv = new JasperViewer(jp, false);
+						jv.setTitle("Lager lista");
+						getModalExclusionType();
+						jv.setModalExclusionType(ModalExclusionType.APPLICATION_EXCLUDE);
+						jv.setSize(1200, 900);
+						jv.setVisible(true);
+					} catch (JRException e1) {
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+	
+	
+				
+				
+				}
+			});
 
-
+		}
+		
 		toolBar.addSeparator(new Dimension(50, 0));
 		btnFirst = new JButton(new FirstAction(this));
 		toolBar.add(btnFirst);
@@ -182,36 +245,42 @@ public class ArtikalForm extends JDialog {
 		
 		toolBar.addSeparator(new Dimension(50, 0));
 		
-		btnAdd = new JButton(new AddAction(this));
-		btnAdd.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mode=MODE_ADD;
-				tfId.setEditable(false);
-				tfId.setText("");
-				tfNaziv.setText("");
-				tfGA.setText("");
-				tfJedMere.setText("");
-				tfPakovanje.setText("");
-				tfOpis.setText("");
-				tfNaziv.requestFocusInWindow();
+		if(magacin==null){
+			btnAdd = new JButton(new AddAction(this));
+			btnAdd.addActionListener(new ActionListener() {
 				
-			}
-		});
-		toolBar.add(btnAdd);
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					mode=MODE_ADD;
+					tfId.setEditable(false);
+					tfId.setText("");
+					tfNaziv.setText("");
+					tfGA.setText("");
+					tfJedMere.setText("");
+					tfPakovanje.setText("");
+					tfMagacin.setText("");
+					tfCena.setText("");
+					tfKolicina.setText("");
+					tfCena.setEditable(true);
+					tfKolicina.setEditable(true);
+					tfNaziv.requestFocusInWindow();
+					
+				}
+			});
+			toolBar.add(btnAdd);
 		
-		btnDelete = new JButton(new DeleteAction(this));
-		btnDelete.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				removeRow();
+			btnDelete = new JButton(new DeleteAction(this));
+			btnDelete.addActionListener(new ActionListener() {
 				
-			}
-		});
-		toolBar.add(btnDelete);
-		
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if(JOptionPane.showConfirmDialog(ArtikalForm.this, "Da li ste sigurni?", "Brisanje", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
+						removeRow();
+					
+				}
+			});
+			toolBar.add(btnDelete);
+		}
 		toolBar.addSeparator(new Dimension(50, 0));
 		
 		btnNextForm=new JButton(new NextFormAction(this));
@@ -234,20 +303,11 @@ public class ArtikalForm extends JDialog {
 	}
 	
 	private void initTable(){
-		/*JScrollPane scrollPane = new JScrollPane(tblGrid);
-		add(scrollPane, "grow, wrap");*/
 		
-	      //Kreiranje tabele (atribut klase frmDrzave)
-			
-	      //Dodati u metodu za kreiranje tabele koja se  poziva iz konstruktora klase
-	      //frmDrzave:
-
-	      //Omogućavanje skrolovanja ubacivanjem tabele u ScrollPane
 	      JScrollPane scrollPane = new JScrollPane(tblGrid);      
 	      add(scrollPane, "wrap, grow");
-
-	      // Kreiranje TableModel-a, parametri: header-i kolona i broj redova 
-	      tableModel = new ArtikalTableModel(new String[] {"ID",   "Naziv", "Opis", "Jedinica mere", "Pakovanje", "Grupa artikala"}, 0);
+	      
+	      tableModel = new ArtikalTableModel(new String[] {"ID",   "Naziv", "Jedinica mere", "Pakovanje", "Grupa artikala"}, 0);
 	      tblGrid.setModel(tableModel);
 	      
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -266,16 +326,12 @@ public class ArtikalForm extends JDialog {
 	      try {
 			tableModel.open();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 
-	      //Dozvoljeno selektovanje redova
 	      tblGrid.setRowSelectionAllowed(true);
-	      //Ali ne i selektovanje kolona 
 	      tblGrid.setColumnSelectionAllowed(false);
 
-	      //Dozvoljeno selektovanje samo jednog reda u jedinici vremena 
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 	
@@ -294,9 +350,18 @@ public class ArtikalForm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(mode==MODE_ADD){
-					addRow();
+					if(tfNaziv.getText().trim().equals("") || tfGA.getText().trim().equals("") || tfJedMere.getText().trim().equals("") || tfCena.getText().trim().equals("") || tfKolicina.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(ArtikalForm.this, "Morate popuniti polja!");
+					else if (Pomocni.isInteger(tfCena.getText().trim())!=true || Pomocni.isInteger(tfKolicina.getText().trim())!=true || 
+							Pomocni.isInteger(tfPakovanje.getText().trim())!=true)
+						JOptionPane.showMessageDialog(ArtikalForm.this, "Vrednosti u poljima cena, kolicina i pakovanje moraju biti broj!");
+					else
+						addRow();
 				}else if(mode==MODE_EDIT){
-					editRow();
+					if(tfNaziv.getText().trim().equals("") || tfJedMere.getText().trim().equals("") || tfPakovanje.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(ArtikalForm.this, "Morate popuniti polja!");
+					else
+						editRow();
 				}else{
 					tableModel.setRowCount(0);
 					search();
@@ -312,11 +377,12 @@ public class ArtikalForm extends JDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				tfCena.setEditable(false);
+				tfKolicina.setEditable(false);
 				if(mode==MODE_SEARCH)
 					try {
 						tableModel.open();
 					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				
@@ -325,6 +391,7 @@ public class ArtikalForm extends JDialog {
 				
 			}
 		});
+		
 		
 		btnGA.addActionListener(new ActionListener() {
 			
@@ -344,34 +411,56 @@ public class ArtikalForm extends JDialog {
 				
 			}
 		});
+		
+		btnMagacin.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MagacinForm mf=new MagacinForm(null);
+				mf.setVisible(true);
+				magacin=mf.magacin.getId().toString();
+				tfMagacin.setText(mf.magacin.getNaziv());
+				
+			}
+		});
 
 		JLabel lblSifra = new JLabel ("ID:");
 		JLabel lblNaziv = new JLabel("Naziv:");
-		JLabel lblOpis = new JLabel("Opis:");
 		JLabel lblJedMere = new JLabel("Jedinica mere:");
 		JLabel lblPakovanje = new JLabel("Pakovanje:");
 		JLabel lblGA = new JLabel("Grupa artikala:");
+		JLabel lblCena = new JLabel("Prodajna cena:");
+		JLabel lblKolicina = new JLabel("Kolicina:");
+		JLabel lblMagacin= new JLabel("Magacin za skladistenje artikla");
 		
-
-		dataPanel.add(lblSifra);
-		dataPanel.add(tfId);
-		dataPanel.add(lblJedMere);
-		dataPanel.add(tfJedMere);
-		dataPanel.add(lblOpis);
-		dataPanel.add(tfOpis,"wrap");
-		dataPanel.add(lblNaziv);
-		dataPanel.add(tfNaziv);
-		dataPanel.add(lblPakovanje);
-		dataPanel.add(tfPakovanje);
-		dataPanel.add(lblGA);
-		dataPanel.add(tfGA);
-		dataPanel.add(btnGA);
-		
-		bottomPanel.add(dataPanel);
-		
-		buttonsPanel.setLayout(new MigLayout("wrap"));
-		buttonsPanel.add(btnCommit);
-		buttonsPanel.add(btnRollback);
+		if(magacin==null){
+			dataPanel.add(lblSifra);
+			dataPanel.add(tfId);
+			dataPanel.add(lblNaziv);
+			dataPanel.add(tfNaziv);
+	
+			dataPanel.add(lblJedMere);
+			dataPanel.add(tfJedMere);
+			dataPanel.add(lblPakovanje);
+			dataPanel.add(tfPakovanje);
+			dataPanel.add(lblGA);
+			dataPanel.add(tfGA);
+			dataPanel.add(btnGA, "wrap");
+			dataPanel.add(lblCena);
+			dataPanel.add(tfCena);
+			dataPanel.add(lblKolicina);
+			dataPanel.add(tfKolicina);
+			dataPanel.add(lblMagacin);
+			dataPanel.add(tfMagacin);
+			dataPanel.add(btnMagacin);
+			
+			bottomPanel.add(dataPanel);
+			
+			buttonsPanel.setLayout(new MigLayout("wrap"));
+			
+			buttonsPanel.add(btnCommit);
+			buttonsPanel.add(btnRollback);
+		}
 		bottomPanel.add(buttonsPanel,"dock east");
 
 		add(bottomPanel, "grow, wrap");
@@ -386,14 +475,12 @@ public class ArtikalForm extends JDialog {
 		    }
 		    String id = (String)tableModel.getValueAt(index, 0);
 		    String naziv = (String)tableModel.getValueAt(index, 1);
-		    String opis = (String)tableModel.getValueAt(index, 2);
-		    String jedMere = (String)tableModel.getValueAt(index, 3);
-		    String pakovanje = (String)tableModel.getValueAt(index, 4);
-		    String ga = (String)tableModel.getValueAt(index, 5);
+		    String jedMere = (String)tableModel.getValueAt(index, 2);
+		    String pakovanje = (String)tableModel.getValueAt(index, 3);
+		    String ga = (String)tableModel.getValueAt(index, 4);
 		    
 		    tfId.setText(id);
 		    tfNaziv.setText(naziv);
-		    tfOpis.setText(opis);
 		    tfJedMere.setText(jedMere);
 		    tfPakovanje.setText(pakovanje);
 		    tfGAId.setText(ga);
@@ -403,14 +490,13 @@ public class ArtikalForm extends JDialog {
 	 public void addRow(){
 		 artikal=new Artikal();
 		 artikal.setNaziv(tfNaziv.getText().trim());
-		 artikal.setOpis(tfOpis.getText().trim());
 		 artikal.setJedinicaMere(tfJedMere.getText().trim());
-		 artikal.setPakovanje(tfPakovanje.getText().trim());
+		 artikal.setPakovanje(Double.parseDouble(tfPakovanje.getText().trim()));
 		 artikal.setGrupaArtikalaID(Integer.parseInt(tfGAId.getText().trim()));
 		 try {
 			tableModel.insertRow(artikal);
+			tableModel.insertMK(Double.parseDouble(tfCena.getText().trim()), Integer.parseInt(tfKolicina.getText().trim()), magacin);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	 }
@@ -421,16 +507,16 @@ public class ArtikalForm extends JDialog {
 			 artikal=new Artikal();
 			 artikal.setId(Integer.parseInt(tfId.getText().trim()));
 			 artikal.setNaziv(tfNaziv.getText().trim());
-			 artikal.setOpis(tfOpis.getText().trim());
 			 artikal.setJedinicaMere(tfJedMere.getText().trim());
-			 artikal.setPakovanje(tfPakovanje.getText().trim());
 		 
 			 
 		 try {
+			 artikal.setPakovanje(Double.parseDouble(tfPakovanje.getText().trim()));
 			tableModel.editRow(artikal, tblGrid.getSelectedRow());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch(NumberFormatException e1){
+			JOptionPane.showMessageDialog(ArtikalForm.this, "Pakovanje mora biti broj!");
 		}
 		 }else
 			 JOptionPane.showMessageDialog(ArtikalForm.this, "Morate selektovati red da biste ga izmenili!");
@@ -439,31 +525,31 @@ public class ArtikalForm extends JDialog {
 	 
 	 public void search(){
 		 artikal=new Artikal();
-		 if(!tfId.getText().trim().equals(""))
-			 artikal.setId(Integer.parseInt(tfId.getText().trim()));
 		 
 		 artikal.setNaziv(tfNaziv.getText().trim());
-		 artikal.setOpis(tfOpis.getText().trim());
 		 artikal.setJedinicaMere(tfJedMere.getText().trim());
-		 artikal.setPakovanje(tfPakovanje.getText().trim());
+		 if(!tfPakovanje.getText().equals(""))
+			 artikal.setPakovanje(Double.parseDouble(tfPakovanje.getText().trim()));
 		 
 		 try {
+			if(!tfId.getText().trim().equals(""))
+				artikal.setId(Integer.parseInt(tfId.getText().trim()));
 			tableModel.search(artikal);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch(NumberFormatException e1){
+			JOptionPane.showMessageDialog(ArtikalForm.this, "Vrednost pretrage mora biti broj!");
 		}
 		 
 	 }
 	 
 	 private void removeRow() {
 		    int index = tblGrid.getSelectedRow(); 
-		    if (index == -1) //Ako nema selektovanog reda (tabela prazna)
-		      return;        // izlazak 
-		    //kada obrisemo tekuci red, selektovacemo sledeci (newindex):
+		    if (index == -1) 
+		      return;
 		    int newIndex = index;  
 		    
-			//sem ako se obrise poslednji red, tada selektujemo prethodni
+		    
 		    if (index == tableModel.getRowCount() - 1) 
 		       newIndex--; 
 		    try {
@@ -502,6 +588,13 @@ public class ArtikalForm extends JDialog {
 				tblGrid.setRowSelectionInterval(tblGrid.getSelectedRow() -1, tblGrid.getSelectedRow() -1);
 			else
 				tblGrid.setRowSelectionInterval(rowCount - 1, rowCount - 1);
+		}
+		
+		private Image setImage(){
+			ImageIcon icon1 = new ImageIcon(getClass().getResource(
+					"/img/magacin.png"));
+			Image img1 = icon1.getImage();
+			return img1;
 		}
 
 }

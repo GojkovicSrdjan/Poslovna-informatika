@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="lagerLista" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" uuid="d1d2ce81-2b80-4525-a919-edb5e90c3da9">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="magacin_id" class="java.lang.String"/>
+	<parameter name="pib" class="java.lang.String"/>
+	<parameter name="pg" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[Select artikal_id, pakovanje, jedMere, a.naziv as artikal, [pocetna kolicina]+[kolicina ulaza]-[kolicina izlaza] as kolicina,
+ [prosecna cena], d.naziv as magacin, c.naziv as preduzece, f.adresa, f.mesto from Artikal a, [Magacinska kartica] b, Preduzece c, Magacin d, Sektor e, Preduzece f where
+ a.artikal_id=b.artikal and b.magacin=d.magacin_id and d.sektor=e.sektor_id and f.PIB=e.PIB and d.magacin_id=b.magacin and b.magacin=$P{magacin_id} and f.PIB=$P{pib} and f.adresa like c.adresa and b.[poslovna godina]=$P{pg}
+
+order by artikal_id]]>
+	</queryString>
+	<field name="artikal_id" class="java.math.BigDecimal"/>
+	<field name="pakovanje" class="java.math.BigDecimal"/>
+	<field name="jedMere" class="java.lang.String"/>
+	<field name="artikal" class="java.lang.String"/>
+	<field name="kolicina" class="java.math.BigDecimal"/>
+	<field name="prosecna cena" class="java.math.BigDecimal"/>
+	<field name="magacin" class="java.lang.String"/>
+	<field name="preduzece" class="java.lang.String"/>
+	<field name="adresa" class="java.lang.String"/>
+	<field name="mesto" class="java.lang.String"/>
+	<variable name="Ukupno" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{prosecna cena}*$F{kolicina}]]></variableExpression>
+	</variable>
+	<variable name="Ukupna kollicina" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{kolicina}]]></variableExpression>
+	</variable>
+	<group name="artikal_id">
+		<groupExpression><![CDATA[$F{artikal_id}]]></groupExpression>
+	</group>
+	<group name="kolicina">
+		<groupExpression><![CDATA[$F{kolicina}]]></groupExpression>
+	</group>
+	<group name="prosecna cena">
+		<groupExpression><![CDATA[$F{prosecna cena}]]></groupExpression>
+	</group>
+	<group name="naziv">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="105" splitType="Stretch">
+			<textField>
+				<reportElement x="114" y="75" width="166" height="20" uuid="ed14d784-856d-4b75-89b8-1fe46fe0cabc"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{magacin}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="10" y="41" width="104" height="20" uuid="a888243d-648a-438d-8b63-a0c23d8b7fd0"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Adresa:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="75" width="104" height="20" uuid="a55129fb-d7b9-489b-b593-bf0a009af048"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Magacin:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="10" width="104" height="20" uuid="c03a60e8-ae50-45e9-95d1-530a2b259132"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Naziv preduzeca:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="114" y="41" width="166" height="20" uuid="bf669933-db6e-467e-998d-d026efc41936"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{adresa}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="114" y="10" width="166" height="20" uuid="e525c73e-f5cf-41c3-9325-845270445fa9"/>
+				<textElement>
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{preduzece}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="636" y="10" width="43" height="20" uuid="a32ba7a8-6f58-4a65-80a4-c9e8ab94cafe"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[Datum:]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="679" y="10" width="100" height="20" uuid="a3658fd2-c6db-4980-b705-b94985976e00"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="280" y="41" width="85" height="20" uuid="9bb24277-07f0-4f6f-84e4-0193c49df995"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{mesto}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="29" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="63" splitType="Stretch">
+			<staticText>
+				<reportElement x="10" y="28" width="57" height="20" uuid="89c2ad1c-b649-4d90-a4f6-9dcdb39adf15"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Artikal id]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="62" width="779" height="1" uuid="dd7c04cd-1ed7-472b-9715-fbb1d5cc6bb2"/>
+			</line>
+			<staticText>
+				<reportElement x="100" y="28" width="66" height="20" uuid="1778512a-bc78-4303-b271-79f8ea3240ee"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Pakovanje]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="191" y="15" width="56" height="33" uuid="8cf2f497-a9c1-44db-8074-616366896530"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Jedinica mere]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="28" width="161" height="20" uuid="01b2cd88-8527-42fe-b818-e5defa0d33d7"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Naziv artikla]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="558" y="15" width="68" height="33" uuid="b087b206-99ff-4f90-b5d8-805977b750c6"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Kalkulisana cena]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="461" y="28" width="57" height="20" uuid="6fe508f4-200b-456a-94ae-0d09747334c1"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Kolicina]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="667" y="15" width="96" height="33" uuid="dd705430-fec1-4ffa-83b4-b9a7481bccac"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Vrednost po ceni]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="0" width="779" height="1" uuid="fbc134d3-f308-42d9-91d9-18fef005fc46"/>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="38" splitType="Stretch">
+			<textField>
+				<reportElement x="10" y="17" width="57" height="21" uuid="4dc8145c-bc42-4ab2-ae6d-1a120e569a24"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{artikal_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="17" width="57" height="21" uuid="7573ec9c-e789-42e3-892e-02fce0731c20"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{pakovanje}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="190" y="17" width="57" height="21" uuid="6cc713f5-4029-4c4e-8d09-df8090ff377a"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{jedMere}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="280" y="17" width="161" height="21" uuid="5907c125-fb35-4cfe-8238-6bfa7a8c9dbc"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{artikal}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="558" y="17" width="68" height="21" uuid="001d79d8-8458-4334-a4b0-b88621078631"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prosecna cena}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="461" y="17" width="57" height="21" uuid="d350d340-8c28-445d-aa95-6a8ca5dabeda"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{kolicina}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="667" y="17" width="96" height="21" uuid="67fc6476-a810-4c57-9055-898b23c7b4c4"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{kolicina}*$F{prosecna cena}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="25" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="31" splitType="Stretch">
+			<textField>
+				<reportElement x="752" y="4" width="27" height="20" uuid="3523618e-f31d-4cc5-bcd9-8af5e5532ff2"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="39" splitType="Stretch">
+			<textField>
+				<reportElement x="667" y="19" width="96" height="20" uuid="4e3c3340-8daf-48e7-be3a-d81b42b1cc49"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Ukupno}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="30" y="19" width="289" height="20" uuid="bbced629-b32d-4760-bd0c-6f3db269a493"/>
+				<textElement textAlignment="Left">
+					<font size="15"/>
+				</textElement>
+				<text><![CDATA[Ukupna vrednost:]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="18" width="779" height="1" uuid="0647edc2-38e3-45c9-8a18-a61f78207a52"/>
+			</line>
+			<textField>
+				<reportElement x="461" y="18" width="57" height="20" uuid="b4432ea6-5f9e-4d36-9208-cfeee9198f4c"/>
+				<textElement textAlignment="Center">
+					<font size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Ukupna kollicina}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

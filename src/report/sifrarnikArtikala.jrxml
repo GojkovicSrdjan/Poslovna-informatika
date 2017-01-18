@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sifrarnikArtikala" language="groovy" pageWidth="600" pageHeight="595" orientation="Landscape" columnWidth="560" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b139c729-606b-4a53-ac12-e299b22caf6b">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="pib" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+    MIN(Artikal."artikal_id") AS Artikal_artikal_id,
+    cast(Artikal."pakovanje" as varchar) pakovanje, cast( Artikal."jedMere"as varchar) jedMere, cast(Artikal."naziv" as varchar) naziv, CAST(Preduzece.naziv as varchar) preduzece
+FROM
+     "dbo"."Artikal" Artikal INNER JOIN "dbo"."Magacinska kartica" Magacinska_kartica ON Artikal."artikal_id" = Magacinska_kartica."artikal"
+     INNER JOIN "dbo"."Magacin" Magacin ON Magacinska_kartica."magacin" = Magacin."magacin_id"
+     INNER JOIN "dbo"."Sektor" Sektor ON Magacin."sektor" = Sektor."sektor_id"
+     INNER JOIN "dbo"."Preduzece" Preduzece ON Sektor."PIB" = Preduzece."PIB"
+     where Preduzece.PIB=$P{pib}
+     GROUP by cast(Artikal."pakovanje" as varchar), cast( Artikal."jedMere"as varchar), cast(Artikal."naziv" as varchar), CAST(Preduzece.naziv as varchar)]]>
+	</queryString>
+	<field name="Artikal_artikal_id" class="java.math.BigDecimal"/>
+	<field name="pakovanje" class="java.lang.String"/>
+	<field name="jedMere" class="java.lang.String"/>
+	<field name="naziv" class="java.lang.String"/>
+	<field name="preduzece" class="java.lang.String"/>
+	<group name="Artikal_artikal_id">
+		<groupExpression><![CDATA[$F{Artikal_artikal_id}]]></groupExpression>
+	</group>
+	<group name="Artikal_jedMere">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<group name="Artikal_naziv">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<group name="Artikal_pakovanje">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch">
+			<textField>
+				<reportElement x="119" y="20" width="166" height="20" uuid="b1bddf65-288e-4788-bd2b-1f791006cad8"/>
+				<textElement>
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{preduzece}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="15" y="20" width="104" height="20" uuid="521afa55-ab1a-4f06-bbdb-39dacef72a72"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Naziv preduzeca:]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="438" y="20" width="100" height="20" uuid="a9907d71-034c-4864-89e8-492e7de413da"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="390" y="20" width="43" height="20" uuid="6404cf0e-1e97-4eaa-bcce-6d42c1f42729"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[Datum:]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="65" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="59" width="560" height="1" uuid="c0edf2ee-6ec1-42df-adba-2bc7bb0519df"/>
+			</line>
+			<staticText>
+				<reportElement x="15" y="29" width="57" height="20" uuid="8f8297d4-3863-4801-80a1-77162106a45e"/>
+				<textElement textAlignment="Left">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Artikal id]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="138" y="29" width="66" height="20" uuid="9dc78a0e-cc20-44ed-a74e-4ee75121563a"/>
+				<textElement textAlignment="Left">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Pakovanje]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="356" y="29" width="161" height="20" uuid="51b67771-ab22-4eb6-9822-db1c5bcd6034"/>
+				<textElement textAlignment="Left">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Naziv artikla]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="262" y="16" width="56" height="33" uuid="77de35da-c7ae-48c9-aaa6-58442cb0448e"/>
+				<textElement textAlignment="Left">
+					<font size="13"/>
+				</textElement>
+				<text><![CDATA[Jedinica mere]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="38" splitType="Stretch">
+			<textField>
+				<reportElement x="262" y="10" width="56" height="20" uuid="6edc5a23-e17c-4271-ac7c-ec88ec319553"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{jedMere}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="15" y="10" width="57" height="20" uuid="58b40fca-5e1f-4166-89d4-a4c8e8b2798d"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Artikal_artikal_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="356" y="10" width="161" height="20" uuid="1d41fae4-75ad-4bb1-857e-27217794a302"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{naziv}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="138" y="10" width="66" height="20" uuid="0137f4eb-0cce-4809-b395-e91f6dd9c06b"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{pakovanje}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="35" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch">
+			<textField>
+				<reportElement x="511" y="19" width="27" height="20" uuid="6dc2161b-ae84-4faf-b60e-27c202a30d5f"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

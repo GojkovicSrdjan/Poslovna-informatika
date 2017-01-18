@@ -3,14 +3,25 @@ package form;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.HeadlessException;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -30,40 +41,51 @@ import actions.PickupAction;
 import actions.PreviousAction;
 import actions.RefreshAction;
 import actions.SearchAction;
+import model.Magacin;
+import model.PoslovnaGodina;
+import model.Preduzece;
+import model.PrometniDokument;
+import model.Sektor;
 import net.miginfocom.swing.MigLayout;
+import tableModel.PrometniDokumentTableModel;
 
 public class PrometniDokumentDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
+	private PrometniDokumentTableModel tableModel=new PrometniDokumentTableModel();
 	private JPanel contentPanel, leftContentPanel1, leftContentPanel2, leftContentPanel3,
-		leftContentPanel4, rightContentPanel, lokacijaUPrometuPanel, strankaUPrometuPanel;
+		leftContentPanel4, rightContentPanel, lokacijaUPrometuPanel, strankaUPrometuPanel, rightContentPanel5;
 	private Box leftVertBox, rightVertBox, lokUProHorBox, lokUProHorBox1, lokUProHorBox2,
 		strUProHorBox, strUProHorBox1, strUProHorBox2, strUProHorBox3;
 	@SuppressWarnings("unused")
-	private JLabel brojLabel, orginalniDokumentLabel, datumLabel, vrstaPrometaLabel, nazivVrsteLabel,
+	private JLabel vrstaDok, pgLabel, datumLabel, vrstaPrometaLabel, nazivVrsteLabel,
 		preduzeceLabelLUP, sektorLabelLUP, magacinLabelLUP, nazivMagacinaLabelLUP, nazivStrankeLabelSUP,
 		sektorLabelSUP, magacinLabelSUP, spoljniPartnerLabelSUP;
 	@SuppressWarnings("unused")
-	private JTextField brojTextField, orginalniDokumentTextField, datumTextField, vrstaPrometaTextField,
+	private JTextField vrstaTextField, pgTextField, datumTextField, vrstaPrometaTextField,
 		nazivVrsteTextField, preduzeceTextFieldLUP, sektorTextFieldLUP, magacinTextFieldLUP,
 		nazivMagacinaTextFieldLUP, nazivStrankeTextFieldSUP, sektorTextFieldSUP, magacinTextFieldSUP,
 		spoljniPartnerTextFieldSUP;
-	private JButton stavkePrometaButton, spoljniPartnerButtonSUP, sektorButtonSUP, magacinButtonSUP;
+	private JButton stavkePrometaButton, spoljniPartnerButtonSUP, sektorButtonSUP, magacinButtonSUP, magacinButton,
+	pgButton, listaButton, stornoButton, okButton, knjizenjeButton, sektorButtonLUP, otpremiButton;
 	private JRadioButton spoljniPrometRadioButton, unutrasnjiPrometRadioButton;
-
+	private String currentSektorP, currentMagacinP, currentPPP, currentSektorS, currentMagacinS, currentPG;
+	private Integer currentPD, parentPD;
+	private JComboBox<String> statusCB;
+	private PrometniDokument pd;
 	
 	/**
 	 * Create the dialog.
 	 */
 	public PrometniDokumentDialog() {
-		
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
 		getContentPane().setLayout(new MigLayout("fill"));
 
 		setSize(new Dimension(800, 500));
 		setTitle("Prometni dokument");
+		setIconImage(setImage());
 		setLocationRelativeTo(MainForm.getInstance());
 		setModal(true);
-		
 		initToolbar();
 		initContentPanel();
 		initBottomPanel();
@@ -87,27 +109,51 @@ public class PrometniDokumentDialog extends JDialog {
 				{
 					JSeparator separator = new JSeparator();
 					leftContentPanel1.add(separator);
-					//Orginalni dokument
-					orginalniDokumentLabel = new JLabel();
-					orginalniDokumentTextField = new JTextField();
-					orginalniDokumentTextField.setColumns(10);
-					leftContentPanel1.add(orginalniDokumentLabel);
+					//Poslovna godina
+					pgLabel = new JLabel();
+					pgTextField = new JTextField();
+					pgTextField.setColumns(5);
+					leftContentPanel1.add(pgLabel);
 					//
-					orginalniDokumentLabel.setText("Orginalni dokument:");
-					orginalniDokumentLabel.setLabelFor(orginalniDokumentTextField);
-					leftContentPanel1.add(orginalniDokumentTextField);
+					pgLabel.setText("Poslovna godina:");
+					pgLabel.setLabelFor(pgTextField);
+					pgTextField.setEditable(false);
+					leftContentPanel1.add(pgTextField);
+					
+					pgButton=new JButton("...");
+					pgButton.setSize(18,20);
+					pgButton.setMaximumSize(pgButton.getSize());
+					pgButton.setPreferredSize(pgButton.getSize());
+					pgButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							PoslovnaGodinaDialog pgd=new PoslovnaGodinaDialog("nije zakljucena");
+							pgd.setVisible(true);
+							
+							try{
+								PoslovnaGodina pg=pgd.pg;
+								pgTextField.setText(pg.getGodina().toString());
+								currentPG=pg.getId().toString();
+							}catch(NullPointerException e1){
+								
+							}
+						}
+					});
+					leftContentPanel1.add(pgButton);
 					
 					JSeparator separator1 = new JSeparator();
 					leftContentPanel1.add(separator1);
 					//Broj
-					brojLabel = new JLabel();
-					brojTextField = new JTextField();
-					brojTextField.setColumns(5);
-					leftContentPanel1.add(brojLabel);
+					vrstaDok = new JLabel();
+					vrstaTextField = new JTextField();
+					vrstaTextField.setColumns(10);
+					vrstaTextField.setEditable(false);
+					leftContentPanel1.add(vrstaDok);
 					//
-					brojLabel.setText("Broj:");
-					brojLabel.setLabelFor(brojTextField);
-					leftContentPanel1.add(brojTextField);
+					vrstaDok.setText("Vrsta dok:");
+					vrstaDok.setLabelFor(vrstaTextField);
+					leftContentPanel1.add(vrstaTextField);
 					
 					JSeparator separator2 = new JSeparator();
 					leftContentPanel1.add(separator2);
@@ -117,59 +163,13 @@ public class PrometniDokumentDialog extends JDialog {
 					datumTextField.setColumns(10);
 					leftContentPanel1.add(datumLabel);
 					//
-					datumLabel.setText("Datum:");
+					datumLabel.setText("Datum nastanka:");
 					datumLabel.setLabelFor(datumTextField);
+					datumTextField.setEditable(false);
 					leftContentPanel1.add(datumTextField);
 				}
 				leftVertBox.add(leftContentPanel1);
 				//END Left Content Panel 1
-				
-				//START Left Content Panel 2
-				leftContentPanel2 = new JPanel();
-				leftContentPanel2.setLayout(new FlowLayout(FlowLayout.LEFT));
-				{
-					JSeparator separator = new JSeparator();
-					leftContentPanel2.add(separator);
-					//Vrsta prometa
-					vrstaPrometaLabel = new JLabel();
-					vrstaPrometaTextField = new JTextField();
-					vrstaPrometaTextField.setColumns(3);
-					leftContentPanel2.add(vrstaPrometaLabel);
-					//
-					vrstaPrometaLabel.setText("Vrsta prometa:");
-					vrstaPrometaLabel.setLabelFor(vrstaPrometaTextField);
-					leftContentPanel2.add(vrstaPrometaTextField);
-					//
-					JButton vrstaPrometaButton = new JButton("...");
-					vrstaPrometaButton.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							/*VrstaPrometaDialog vpd=new VrstaPrometaDialog();
-							setVisible(false);
-							vpd.setVisible(true);
-							vpd.setVisible(false);
-							setVisible(true);*/
-						}
-					});
-					vrstaPrometaButton.setSize(18, 20);
-					vrstaPrometaButton.setPreferredSize(vrstaPrometaButton.getSize());
-					vrstaPrometaButton.setMaximumSize(vrstaPrometaButton.getSize());
-					leftContentPanel2.add(vrstaPrometaButton);
-					
-					JSeparator separator1 = new JSeparator();
-					leftContentPanel2.add(separator1);
-					//Naziv Vrste
-					nazivVrsteLabel = new JLabel();
-					nazivVrsteTextField = new JTextField();
-					nazivVrsteTextField.setColumns(20);
-					leftContentPanel2.add(nazivVrsteLabel);
-					//
-					nazivVrsteLabel.setText("Naziv vrste:");
-					nazivVrsteLabel.setLabelFor(nazivVrsteTextField);
-					leftContentPanel2.add(nazivVrsteTextField);
-				}
-				leftVertBox.add(leftContentPanel2);
-				//END Left Content Panel 2
 				
 				//START Left Content Panel 3
 				leftContentPanel3 = new JPanel();
@@ -190,53 +190,44 @@ public class PrometniDokumentDialog extends JDialog {
 								JPanel lokUProSubPanel1 = new JPanel();
 								lokUProSubPanel1.setLayout(new FlowLayout(FlowLayout.LEFT));
 								{
-									/*//Preduzece
-									preduzeceLabel = new JLabel();
-									preduzeceTextField = new JTextField();
-									preduzeceTextField.setColumns(3);
-									lokUProSubPanel1.add(preduzeceLabel);
-									//
-									preduzeceLabel.setText("Preduzece:");
-									preduzeceLabel.setLabelFor(preduzeceTextField);
-									lokUProSubPanel1.add(preduzeceTextField);
-									//
-									JButton preduzeceButton = new JButton("...");
-									preduzeceButton.addActionListener(new ActionListener() {
-										@Override
-										public void actionPerformed(ActionEvent e) {
-											PreduzeceDialog pd=new PreduzeceDialog();
-											setVisible(false);
-											pd.setVisible(true);
-											pd.setVisible(false);
-											setVisible(true);
-										}
-									});
-									preduzeceButton.setSize(18, 20);
-									preduzeceButton.setPreferredSize(preduzeceButton.getSize());
-									preduzeceButton.setMaximumSize(preduzeceButton.getSize());
-									lokUProSubPanel1.add(preduzeceButton);*/
+									
+									//Magacin button
+									magacinButton = new JButton("...");
+									magacinButton.setEnabled(false);
 									
 									JSeparator separator = new JSeparator();
 									lokUProSubPanel1.add(separator);
 									//Sektor
 									sektorLabelLUP = new JLabel();
 									sektorTextFieldLUP = new JTextField();
-									sektorTextFieldLUP.setColumns(3);
+									sektorTextFieldLUP.setColumns(5);
+									sektorTextFieldLUP.setEditable(false);
 									lokUProSubPanel1.add(sektorLabelLUP);
 									//
 									sektorLabelLUP.setText("Sektor:");
 									sektorLabelLUP.setLabelFor(sektorTextFieldLUP);
 									lokUProSubPanel1.add(sektorTextFieldLUP);
 									//
-									JButton sektorButtonLUP = new JButton("...");
+									sektorButtonLUP = new JButton("...");
 									sektorButtonLUP.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
 											SektorForm sf=new SektorForm();
-											setVisible(false);
 											sf.setVisible(true);
-											sf.setVisible(false);
-											setVisible(true);
+											
+											try{
+												Sektor s=sf.getSektor();
+												sektorTextFieldLUP.setText(s.getNaziv());
+												currentSektorS=s.getId().toString();
+												magacinButton.setEnabled(true);
+												
+												//izmena vrednosti
+												magacinTextFieldLUP.setText("");
+												currentMagacinS=null;
+												
+											}catch(NullPointerException e1){
+												
+											}
 										}
 									});
 									sektorButtonLUP.setSize(18, 20);
@@ -249,22 +240,28 @@ public class PrometniDokumentDialog extends JDialog {
 									//Magacin
 									magacinLabelLUP = new JLabel();
 									magacinTextFieldLUP = new JTextField();
-									magacinTextFieldLUP.setColumns(3);
+									magacinTextFieldLUP.setColumns(5);
+									magacinTextFieldLUP.setEditable(false);
 									lokUProSubPanel1.add(magacinLabelLUP);
 									//
 									magacinLabelLUP.setText("Magacin:");
 									magacinLabelLUP.setLabelFor(magacinTextFieldLUP);
 									lokUProSubPanel1.add(magacinTextFieldLUP);
-									//
-									JButton magacinButton = new JButton("...");
+									
 									magacinButton.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
-											MagacinForm mf = new MagacinForm(null);
-											setVisible(false);
+											MagacinForm mf = new MagacinForm(currentSektorS);
 											mf.setVisible(true);
-											mf.setVisible(false);
-											setVisible(true);
+											
+											try{
+												Magacin m=mf.magacin;
+												currentMagacinS=m.getId().toString();
+												magacinTextFieldLUP.setText(m.getNaziv());
+												
+											}catch(NullPointerException e1){
+												
+											}
 										}
 									});
 									magacinButton.setSize(18, 20);
@@ -277,30 +274,8 @@ public class PrometniDokumentDialog extends JDialog {
 								
 							}
 							lokUProHorBox.add(lokUProHorBox1);
-							//END LokUProHorBox1
+							//END LokUProHorBox
 							
-							//Start LokUProHorBox2
-							lokUProHorBox2 = new Box(BoxLayout.X_AXIS);
-							{
-								JPanel lokUProSubPanel2 = new JPanel();
-								lokUProSubPanel2.setLayout(new FlowLayout(FlowLayout.LEFT));
-								{
-									JSeparator separator = new JSeparator();
-									lokUProSubPanel2.add(separator);
-									//Naziv Magacina
-									nazivMagacinaLabelLUP = new JLabel();
-									nazivMagacinaTextFieldLUP = new JTextField();
-									nazivMagacinaTextFieldLUP.setColumns(40);
-									lokUProSubPanel2.add(nazivMagacinaLabelLUP);
-									//
-									nazivMagacinaLabelLUP.setText("Naziv magacina:");
-									nazivMagacinaLabelLUP.setLabelFor(nazivMagacinaTextFieldLUP);
-									lokUProSubPanel2.add(nazivMagacinaTextFieldLUP);
-								}
-								lokUProHorBox2.add(lokUProSubPanel2);
-							}
-							lokUProHorBox.add(lokUProHorBox2);
-							//END LokUProHorBox2
 						}
 						lokacijaUPrometuPanel.add(lokUProHorBox);
 						//END LokUProHorBox
@@ -348,7 +323,7 @@ public class PrometniDokumentDialog extends JDialog {
 									spoljniPartnerLabelSUP = new JLabel();
 									spoljniPartnerTextFieldSUP = new JTextField();
 									spoljniPartnerTextFieldSUP.setColumns(15);
-									spoljniPartnerTextFieldSUP.setEnabled(true);
+									spoljniPartnerTextFieldSUP.setEditable(false);
 									spoljniPartnerLabelSUP.setEnabled(true);
 									strUProSubPanel1.add(spoljniPartnerLabelSUP);
 									//
@@ -360,11 +335,17 @@ public class PrometniDokumentDialog extends JDialog {
 									spoljniPartnerButtonSUP.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
-											MagacinForm mf = new MagacinForm(null);
-											setVisible(false);
-											mf.setVisible(true);
-											mf.setVisible(false);
-											setVisible(true);
+											PoslovniPartnerDialog ppd=new PoslovniPartnerDialog();
+											ppd.setVisible(true);
+											
+											try{
+												Preduzece p=ppd.p;
+												currentPPP=p.getPIB().toString();
+												spoljniPartnerTextFieldSUP.setText(p.getNaziv());
+												
+											}catch(NullPointerException e1){
+												
+											}
 										}
 									});
 									spoljniPartnerButtonSUP.setSize(18, 20);
@@ -404,13 +385,12 @@ public class PrometniDokumentDialog extends JDialog {
 									//Sektor
 									sektorLabelSUP = new JLabel();
 									sektorTextFieldSUP = new JTextField();
-									sektorTextFieldSUP.setColumns(3);
-									sektorLabelSUP.setEnabled(false);
+									sektorTextFieldSUP.setColumns(5);
 									strUProSubPanel2.add(sektorLabelSUP);
 									//
 									sektorLabelSUP.setText("Sektor:");
 									sektorLabelSUP.setLabelFor(sektorTextFieldSUP);
-									sektorTextFieldSUP.setEnabled(false);
+									sektorTextFieldSUP.setEditable(false);
 									strUProSubPanel2.add(sektorTextFieldSUP);
 									//
 									sektorButtonSUP = new JButton("...");
@@ -418,10 +398,22 @@ public class PrometniDokumentDialog extends JDialog {
 										@Override
 										public void actionPerformed(ActionEvent e) {
 											SektorForm sf=new SektorForm();
-											setVisible(false);
 											sf.setVisible(true);
-											sf.setVisible(false);
-											setVisible(true);
+											
+											try{
+												Sektor s=sf.getSektor();
+												currentSektorP=s.getId().toString();
+												sektorTextFieldSUP.setText(s.getNaziv());
+												magacinButtonSUP.setEnabled(true);
+												
+												//Izmena vrednosti
+												currentMagacinP=null;
+												magacinTextFieldSUP.setText("");
+
+											}catch(NullPointerException e1){
+												
+											}
+											
 										}
 									});
 									sektorButtonSUP.setSize(18, 20);
@@ -435,24 +427,31 @@ public class PrometniDokumentDialog extends JDialog {
 									//Magacin
 									magacinLabelSUP = new JLabel();
 									magacinTextFieldSUP = new JTextField();
-									magacinTextFieldSUP.setColumns(3);
-									magacinLabelSUP.setEnabled(false);
+									magacinTextFieldSUP.setColumns(5);
 									strUProSubPanel2.add(magacinLabelSUP);
 									//
 									magacinLabelSUP.setText("Magacin:");
 									magacinLabelSUP.setLabelFor(magacinTextFieldSUP);
-									magacinTextFieldSUP.setEnabled(false);
+									magacinTextFieldSUP.setEditable(false);
 									strUProSubPanel2.add(magacinTextFieldSUP);
-									//
+									//Magacin button
 									magacinButtonSUP = new JButton("...");
+									magacinButtonSUP.setEnabled(false);
 									magacinButtonSUP.addActionListener(new ActionListener() {
 										@Override
 										public void actionPerformed(ActionEvent e) {
-											MagacinForm mf = new MagacinForm(null);
-											setVisible(false);
+											MagacinForm mf = new MagacinForm(currentSektorP);
 											mf.setVisible(true);
-											mf.setVisible(false);
-											setVisible(true);
+											
+											try{
+												Magacin m=mf.magacin;
+												currentMagacinP=m.getId().toString();
+												magacinTextFieldSUP.setText(m.getNaziv());
+												
+											}catch(NullPointerException e1){
+												
+											}
+											
 										}
 									});
 									magacinButtonSUP.setSize(18, 20);
@@ -465,30 +464,6 @@ public class PrometniDokumentDialog extends JDialog {
 							}
 							strUProHorBox.add(strUProHorBox2);
 							//END strUProHorBox2
-							
-							//Start strUProHorBox3
-							strUProHorBox3 = new Box(BoxLayout.X_AXIS);
-							{
-								JPanel strUProSubPanel3 = new JPanel();
-								strUProSubPanel3.setLayout(new FlowLayout(FlowLayout.LEFT));
-								{
-									JSeparator separator2 = new JSeparator();
-									strUProSubPanel3.add(separator2);
-									
-									//Naziv Stranke
-									nazivStrankeLabelSUP = new JLabel();
-									nazivStrankeTextFieldSUP = new JTextField();
-									nazivStrankeTextFieldSUP.setColumns(40);
-									strUProSubPanel3.add(nazivStrankeLabelSUP);
-									//
-									nazivStrankeLabelSUP.setText("Naziv stranke:");
-									nazivStrankeLabelSUP.setLabelFor(nazivStrankeTextFieldSUP);
-									strUProSubPanel3.add(nazivStrankeTextFieldSUP);
-								}
-								strUProHorBox3.add(strUProSubPanel3);
-							}
-							strUProHorBox.add(strUProHorBox3);
-							//END strUProHorBox3
 						}
 						strankaUPrometuPanel.add(strUProHorBox);
 						//END strUProHorBox
@@ -508,21 +483,146 @@ public class PrometniDokumentDialog extends JDialog {
 				rightContentPanel = new JPanel();
 				rightContentPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 				{
-					stavkePrometaButton = new JButton("Stavke prometa");
-					stavkePrometaButton.setActionCommand("Stavke prometa");
-					stavkePrometaButton.addActionListener(new ActionListener() {
+					listaButton=new JButton("Lista dokumenata");
+					listaButton.addActionListener(new ActionListener() {
+						
 						@Override
 						public void actionPerformed(ActionEvent e) {
-							StavkePrometaDialog spd = new StavkePrometaDialog();
-							setVisible(false);
-							spd.setVisible(true);
-							spd.setVisible(false);
-							setVisible(true);
+							ListaDokumenataForm ldf=new ListaDokumenataForm();
+							ldf.setVisible(true);
+							try{
+								pd=ldf.pd;
+								currentSektorP=ldf.selectedSektor;
+								sektorTextFieldSUP.setText(currentSektorP);
+								fill(pd);
+								okButton.setVisible(false);
+							}catch(NullPointerException e2){
+								
+							}
+							
 						}
 					});
-					rightContentPanel.add(stavkePrometaButton);
+					rightContentPanel.add(listaButton);
 				}
 				rightVertBox.add(rightContentPanel);
+				
+				rightContentPanel5=new JPanel();
+				rightContentPanel5.setLayout(new FlowLayout(FlowLayout.LEFT));
+				{
+					knjizenjeButton=new JButton("Proknjizi");
+					knjizenjeButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							try {
+								boolean c= tableModel.check(pd.getId());
+								if(c==true){
+									try {
+										pd.setDatumKnjizenja(getDate());
+										knjizenjeButton.setVisible(false);
+										boolean res=tableModel.proknjizi(pd);
+										if(res!=true){
+											JOptionPane.showMessageDialog(PrometniDokumentDialog.this, "Knjizenje nije uspelo, u magacinu nema trazene kolicine artikala!");
+											statusCB.setSelectedIndex(2);
+										}
+										else{
+											stornoButton.setVisible(true);
+											if(pd.getVrstaDokumenta()==1){
+												parentPD=pd.getId();
+												pd.setVrstaDokumenta(2);
+												tableModel.addPD(pd);
+												currentPD=tableModel.selectLastAdded();
+												pd.setId(currentPD);
+												tableModel.addStavkeOtpremnice(currentPD, parentPD);
+//												tableModel.proknjizi(pd);
+											}
+											statusCB.setSelectedIndex(1);
+										}
+									} catch (ParseException e1) {
+										e1.printStackTrace();
+									}
+								}else
+									JOptionPane.showMessageDialog(PrometniDokumentDialog.this, "Da biste proknjizili dokument, morate imati barem jednu stavku!");
+								
+							} catch (SQLException e1) {
+								e1.printStackTrace();
+							}
+						}
+					});
+					knjizenjeButton.setVisible(false);
+					
+				}
+				rightContentPanel5.add(knjizenjeButton);
+				
+				rightVertBox.add(rightContentPanel5);
+				
+				JPanel stornoPanel=new JPanel();
+				stornoPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+				{
+					stornoButton=new JButton("Storniraj");
+					stornoButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							try {
+								stornoButton.setVisible(false);
+								otpremiButton.setVisible(false);
+								statusCB.setSelectedIndex(2);
+								tableModel.storniraj(pd);
+							} catch (SQLException | ParseException e1) {
+								e1.printStackTrace();
+							}
+							
+						}
+					});
+					stornoButton.setVisible(false);
+				}
+				stornoPanel.add(stornoButton);
+				
+				rightVertBox.add(stornoPanel);
+				
+				JPanel otpremnicaPanel=new JPanel();
+				otpremnicaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+				{
+					otpremiButton=new JButton("Otpremi");
+					otpremiButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							try {
+								parentPD=pd.getId();
+								pd.setVrstaDokumenta(2);
+								tableModel.addPD(pd);
+								currentPD=tableModel.selectLastAdded();
+								pd.setId(currentPD);
+								tableModel.addStavkeOtpremnice(currentPD, parentPD);
+								tableModel.proknjizi(pd);
+								otpremiButton.setVisible(false);
+							} catch (SQLException | ParseException e1) {
+								e1.printStackTrace();
+							}
+						}
+					});
+					otpremiButton.setVisible(false);
+				}
+//				otpremnicaPanel.add(otpremiButton);
+				rightVertBox.add(otpremnicaPanel);
+				
+				JPanel statusPanel=new JPanel();
+				statusPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+				{
+					statusCB=new JComboBox<>();
+					statusCB.addItem("U formiranju");
+					statusCB.addItem("Proknjizen");
+					statusCB.addItem("Storniran");
+					statusCB.addItem("");
+					statusCB.setSelectedIndex(3);
+					statusCB.setEnabled(false);
+				}
+				statusPanel.add(statusCB);
+				
+				rightVertBox.add(statusPanel);
+				
 			}
 			contentPanel.add(rightVertBox);
 			//END Right Vertical Box
@@ -564,7 +664,7 @@ public class PrometniDokumentDialog extends JDialog {
 		    	//
 		    	magacinLabelSUP.setEnabled(true);
 		    	magacinTextFieldSUP.setEnabled(true);
-		    	magacinButtonSUP.setEnabled(true);
+		    	magacinButtonSUP.setEnabled(false);
 	    }
 	}
 	
@@ -579,74 +679,59 @@ public class PrometniDokumentDialog extends JDialog {
 		
 		toolBar = new JToolBar();
 		
-		btnSearch = new JButton(new SearchAction(this));
-		toolBar.add(btnSearch);
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
-		btnPickup = new JButton(new PickupAction(this));
-		toolBar.add(btnPickup);
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
-
-		toolBar.addSeparator(new Dimension(50, 0));
-		
-		btnFirst = new JButton(new FirstAction(this));
-		toolBar.add(btnFirst);
-		btnFirst.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goFirst();
-			}
-		});
-
-		btnPrevious = new JButton(new PreviousAction(this));
-		toolBar.add(btnPrevious);
-		btnPrevious.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goPrevious();
-			}
-		});
-
-		btnNext = new JButton(new NextAction(this));
-		toolBar.add(btnNext);
-		btnNext.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goNext();
-			}
-		});
-
-		btnLast = new JButton(new LastAction(this));
-		toolBar.add(btnLast);
-		btnLast.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goLast();
-			}
-		});
-
 		toolBar.addSeparator(new Dimension(50, 0));
 		
 		btnAdd = new JButton(new AddAction(this));
 		toolBar.add(btnAdd);
-		btnDelete = new JButton(new DeleteAction(this));
-		toolBar.add(btnDelete);
-
-		toolBar.addSeparator(new Dimension(50, 0));
-
-		/*btnNextForm = new JButton(new NextFormAction(this));
-		toolBar.add(btnNextForm);
-		btnNextForm.addActionListener(new ActionListener() {
+		btnAdd.addActionListener(new ActionListener() {
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				AMKForm amk=new AMKForm();
-				setVisible(false);
-				amk.setVisible(true);
-				amk.setVisible(false);
-				setVisible(true);
+				spoljniPrometRadioButton.setEnabled(true);
+				sektorButtonLUP.setEnabled(true);
+				unutrasnjiPrometRadioButton.setEnabled(true);
+				pgButton.setEnabled(true);
+				spoljniPartnerButtonSUP.setEnabled(true);
+				
+				stavkePrometaButton.setEnabled(false);
+				knjizenjeButton.setVisible(false);	
+				stornoButton.setVisible(false);
+				datumTextField.setText("");
+				vrstaTextField.setText("");
+				magacinTextFieldLUP.setText("");
+				magacinTextFieldSUP.setText("");
+				sektorTextFieldLUP.setText("");
+				sektorTextFieldSUP.setText("");
+				pgTextField.setText("");
+				spoljniPartnerTextFieldSUP.setText("");
+				statusCB.setSelectedIndex(3);
+				currentMagacinP=null;
+				currentPPP=null;
+				currentMagacinS=null;
+				
+				okButton.setVisible(true);
 			}
-		});*/
+		});
+
+		toolBar.addSeparator(new Dimension(500, 0));
+
+		stavkePrometaButton = new JButton("Stavke prometa");
+		stavkePrometaButton.setEnabled(false);
+		stavkePrometaButton.setActionCommand("Stavke prometa");
+		stavkePrometaButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(currentPD!=null){
+					StavkePrometaDialog spd = new StavkePrometaDialog(currentMagacinP, currentPD,"Kupac",currentPPP, currentPG);
+					spd.setVisible(true);
+				}else{
+
+					StavkePrometaDialog spd = new StavkePrometaDialog(currentMagacinP, pd.getId(), "Dobavljac", null, currentPG);
+					spd.setVisible(true);
+				}
+			}
+		});
+		toolBar.add(stavkePrometaButton);
 
 		getContentPane().add(toolBar, "dock north");
 	}
@@ -656,7 +741,7 @@ public class PrometniDokumentDialog extends JDialog {
 	 */
 	private void initBottomPanel(){
 		JPanel bottomPanel, buttonPanel;
-		JButton okButton, cancelButton;
+		JButton cancelButton;
 		
 		bottomPanel = new JPanel();
 		bottomPanel.setLayout(new MigLayout("fillx"));
@@ -664,19 +749,179 @@ public class PrometniDokumentDialog extends JDialog {
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		{
-			okButton = new JButton("OK");
-			okButton.setActionCommand("OK");
+			okButton = new JButton("Sacuvaj");
+			okButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if(isFilled()==false)
+						JOptionPane.showMessageDialog(PrometniDokumentDialog.this, "Morate popuniti sva polja!");
+					
+					else{
+							PrometniDokument pd=new PrometniDokument();
+						
+						try {
+							pd.setDatumNastanka(getDate());
+							pd.setPoslovnaGodID(Integer.parseInt(currentPG));
+							
+							if(spoljniPrometRadioButton.isSelected()==true){
+								pd.setPoslovniPartnerID(Integer.parseInt(currentPPP));
+								pd.setVrstaDokumenta(1);
+								
+							}else{
+								pd.setMagacinID(Integer.parseInt(currentMagacinP));
+								pd.setVrstaDokumenta(3);
+							}
+							
+							tableModel.addPD(pd);
+							currentPD=tableModel.selectLastAdded();
+							tableModel.insertKupac(Integer.parseInt(currentMagacinS), currentPD);
+							StavkePrometaDialog spd = new StavkePrometaDialog(currentMagacinP, currentPD, "Kupac",currentPPP, currentPG);
+							spd.setVisible(true);
+							stavkePrometaButton.setEnabled(true);
+							okButton.setVisible(false);
+							
+						} catch (ParseException | SQLException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+			});
 			buttonPanel.add(okButton);
 			getRootPane().setDefaultButton(okButton);
 		}
 		{
-			cancelButton = new JButton("Cancel");
-			cancelButton.setActionCommand("Cancel");
+			cancelButton = new JButton("Izadji");
 			buttonPanel.add(cancelButton);
+			cancelButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					
+						try {
+							if(currentPD!=null){
+								if(tableModel.selectStavke(currentPD).isEmpty()){
+									if(JOptionPane.showConfirmDialog(PrometniDokumentDialog.this,
+											"Vas dokument nece biti poslat, posto nema nijednu stavku. Da li ste sigurni?", "Napomena", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION){
+										tableModel.removePD(currentPD);
+										setVisible(false);
+
+										}
+									}else
+										setVisible(false);
+							}
+							else
+								setVisible(false);
+						} catch (HeadlessException e1) {
+							e1.printStackTrace();
+						} catch (SQLException e1) {
+							e1.printStackTrace();
+						}
+				}
+			});
 		}
 
 		bottomPanel.add(buttonPanel,"dock east");
 
 		getContentPane().add(bottomPanel, "dock south");
+	}
+	
+	private void fill(PrometniDokument p){
+		pgTextField.setText(p.getPoslovnaGodID().toString());
+		
+		datumTextField.setEditable(false);
+		vrstaTextField.setEditable(false);
+		spoljniPrometRadioButton.setEnabled(false);
+		sektorButtonLUP.setEnabled(false);
+		unutrasnjiPrometRadioButton.setEnabled(false);
+		pgButton.setEnabled(false);
+		sektorButtonSUP.setEnabled(false);
+		magacinButton.setEnabled(false);
+		magacinButtonSUP.setEnabled(false);
+		spoljniPartnerButtonSUP.setEnabled(false);
+		
+		if(p.getMagacinID()!=null){
+			spoljniPartnerButtonSUP.setText("");
+			currentPPP=null;
+			magacinTextFieldSUP.setText(p.getMagacinID().toString());
+			currentMagacinP=p.getMagacinID().toString();
+		}
+		else{
+			spoljniPartnerTextFieldSUP.setText(p.getPoslovniPartnerID().toString());
+			currentPPP=p.getPoslovniPartnerID().toString();
+			magacinTextFieldSUP.setText("");
+			sektorTextFieldSUP.setText("");
+			currentMagacinP=null;
+			currentSektorP=null;
+					
+		}
+		Date d=new Date(p.getDatumNastanka().getTime());
+
+		datumTextField.setText(d.toString());
+
+		if(p.getStatusDokumenta()==1){
+			statusCB.setSelectedIndex(0);
+			knjizenjeButton.setVisible(true);	
+			stornoButton.setVisible(false);
+		}
+		else if(p.getStatusDokumenta()==2){
+			statusCB.setSelectedIndex(1);
+			stornoButton.setVisible(true);
+			knjizenjeButton.setVisible(false);
+		}
+		else{
+			statusCB.setSelectedIndex(2);
+			knjizenjeButton.setVisible(false);
+			stornoButton.setVisible(false);
+		}
+		
+		if(p.getVrstaDokumenta()==1){
+			vrstaTextField.setText("Primka");
+			if(p.getStatusDokumenta()==2){
+				otpremiButton.setVisible(true);
+			}
+		}
+		else if(p.getVrstaDokumenta()==2)
+			vrstaTextField.setText("Otpremnica");
+		else
+			vrstaTextField.setText("Medjumagacinski");
+		
+		stavkePrometaButton.setEnabled(true);
+		
+	}
+	
+	private java.util.Date getDate() throws ParseException{
+		String timeStamp = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+		DateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+		
+		java.util.Date d=df.parse(timeStamp);
+		
+		return d;
+	}
+	
+	private boolean isFilled(){
+		boolean isFilled=true;
+		if(magacinTextFieldLUP.getText().trim().equals(""))
+			isFilled=false;
+		
+		if(spoljniPrometRadioButton.isSelected()==true){
+			if(spoljniPartnerTextFieldSUP.getText().trim().equals(""))
+				isFilled=false;
+		}else{
+			if(magacinTextFieldSUP.getText().trim().equals(""))
+				isFilled=false;
+		}
+		if(pgTextField.getText().trim().equals(""))
+			isFilled=false;
+		
+		
+		return isFilled;
+	}
+	
+	private Image setImage(){
+		ImageIcon icon1 = new ImageIcon(getClass().getResource(
+				"/img/magacin.png"));
+		Image img1 = icon1.getImage();
+		return img1;
 	}
 }

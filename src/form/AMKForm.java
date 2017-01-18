@@ -3,20 +3,29 @@ package form;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
+import java.awt.Label;
+import java.awt.Dialog.ModalExclusionType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 
 import actions.FirstAction;
 import actions.HelpAction;
@@ -24,12 +33,19 @@ import actions.LastAction;
 import actions.NextAction;
 import actions.PickupAction;
 import actions.PreviousAction;
+import actions.PrintAction;
 import actions.RefreshAction;
 import actions.SearchAction;
+import db.DBConnection;
 import model.Artikal;
 import model.Magacin;
 import model.MagacinskaKartica;
+import model.PoslovnaGodina;
 import model.Sektor;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
 import tableModel.AnalitikaMKTableModel;
 
 public class AMKForm extends JDialog {
@@ -55,29 +71,73 @@ public class AMKForm extends JDialog {
 	public JTextField txtDatumObracuna;
 	public JTextField txtSifraArtikla;
 	public JTextField txtPakovanje;
-	public JTextField txtPozivNaBroj;
+	public JTextField txtPozivNaBroj,pgTf;
 	public JButton commit;
 	public String selectedSektor;
 	public String selectedMagacin;
-	public String selectedArtikal;
+	public String selectedArtikal, selectedPG;
 	private JButton btnAdd, btnCommit, btnDelete, btnFirst, btnLast, btnHelp, btnNext, btnNextForm,
-	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious;
+	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious, btnMagacin, btnSektor, btnArtikal, btnPG, btnReport;
 	private JToolBar toolBar;
 	
 	public AMKForm(String MKsektor, String MKsektorId,
 			String MKmagacin, String MKmagacinId,
-			String MKartikal, String MKartikalId){
+			String MKartikal, String MKartikalId,
+			String MKPG, String MKPGId){
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
 		
-		setSize(1150, 650);
+		setSize(1200, 650);
 		setTitle("Analitika magacinske kartice");
 		setModal(true);
 		setLocationRelativeTo(null);
+		setIconImage(setImage());
 		initToolbar();
 		JPanel sektor = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JPanel magacin = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JPanel analitikaMK = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JPanel poslovnaGodina = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
+		//Magacin button
+		btnMagacin = new JButton("...");
+		btnMagacin.setEnabled(false);
+		
+		//Poslovna godina
+		JLabel pgLabel=new JLabel("Poslovna godina:");
+		
+		pgTf=new JTextField(5);
+		pgTf.setEditable(false);
+		pgTf.setText(MKPG);
+		selectedPG=MKPGId;
+		
+		btnPG=new JButton("...");
+		btnPG.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				PoslovnaGodinaDialog pgd=new PoslovnaGodinaDialog(null);
+				pgd.setVisible(true);
+				
+				try{
+					PoslovnaGodina pg=pgd.pg;
+					pgTf.setText(pg.getGodina().toString());
+					selectedPG=pg.getId().toString();
+					if(selectedArtikal!=null)
+						tableModel.open(selectedMagacin, selectedArtikal, selectedPG);
+				}catch(NullPointerException e1){
+					
+				}
+			}
+		});
+		
+		btnPG.setSize(18, 20);
+		btnPG.setPreferredSize(btnPG.getSize());
+		btnPG.setMaximumSize(btnPG.getSize());
+		
+		poslovnaGodina.add(pgLabel);
+		poslovnaGodina.add(pgTf);
+		poslovnaGodina.add(btnPG);
+		poslovnaGodina.add(Box.createHorizontalStrut(50));
+		
 		//sektor
 		JLabel lSektor = new JLabel("Sektor");
 		txtSektor = new JTextField(10);
@@ -85,8 +145,8 @@ public class AMKForm extends JDialog {
 		txtSektor.setText(MKsektor);
 		selectedSektor=MKsektorId;
 		
-		JButton btn1 = new JButton("...");
-		btn1.addActionListener(new ActionListener() {
+		btnSektor = new JButton("...");
+		btnSektor.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -97,20 +157,32 @@ public class AMKForm extends JDialog {
 					Sektor s=sf.getSektor();
 					selectedSektor=s.getId().toString();
 					txtSektor.setText(s.getNaziv());
-					//btn2.setEnabled(true);
+					btnMagacin.setEnabled(true);
+					
+					//izmena vrednosti
+					txtMagacin.setText("");
+					selectedMagacin=null;
+					btnArtikal.setEnabled(false);
+					txtArtikal.setText("");
+					selectedArtikal=null;
 				}catch(NullPointerException e1){
 					
 				}
 				
 			}
 		});
-		btn1.setSize(18, 20);
-		btn1.setPreferredSize(btn1.getSize());
-		btn1.setMaximumSize(btn1.getSize());
+		btnSektor.setSize(18, 20);
+		btnSektor.setPreferredSize(btnSektor.getSize());
+		btnSektor.setMaximumSize(btnSektor.getSize());
 		
 		sektor.add(lSektor);
 		sektor.add(txtSektor);
-		sektor.add(btn1);
+		sektor.add(btnSektor);
+		
+		//Arikal button
+		btnArtikal = new JButton("...");
+		btnArtikal.setEnabled(false);
+		
 		//magacin
 		JLabel lMagacin = new JLabel("Magacin");
 		
@@ -119,12 +191,8 @@ public class AMKForm extends JDialog {
 		txtMagacin.setText(MKmagacin);
 		selectedMagacin=MKmagacinId;
 		
-		JButton btn2 = new JButton("...");
-
-		//btn2.setEnabled(false);
 		
-		
-		btn2.addActionListener(new ActionListener() {
+		btnMagacin.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -132,78 +200,62 @@ public class AMKForm extends JDialog {
 				
 				mf.setVisible(true);
 				try{
-//					Magacin m=mf.getMagacin();
 					Magacin m=mf.magacin;
 					selectedMagacin=m.getId().toString();
 					txtMagacin.setText(m.getNaziv());
+					btnArtikal.setEnabled(true);
 					
+					//izmena vrednosti
+					txtArtikal.setText("");
+					selectedArtikal=null;
 				}catch(NullPointerException e1){
 					
 				}
 			}
 		});
-		btn2.setSize(18, 20);
-		btn2.setPreferredSize(btn2.getSize());
-		btn2.setMaximumSize(btn2.getSize());
+		btnMagacin.setSize(18, 20);
+		btnMagacin.setPreferredSize(btnMagacin.getSize());
+		btnMagacin.setMaximumSize(btnMagacin.getSize());
 		
 		magacin.add(lMagacin);
 		magacin.add(txtMagacin);
-		magacin.add(btn2);
-
-		//analitikaMK
-//		JLabel lAnalitikaMK = new JLabel("Analitika m.k.");
-//		
-//		txtAMK = new JTextField(10);
-//		txtAMK.setEditable(false);
-//		
-//		JButton btn3 = new JButton("...");
-//		btn3.setSize(18, 20);
-//		btn3.setPreferredSize(btn3.getSize());
-//		btn3.setMaximumSize(btn3.getSize());
-//
-//		analitikaMK.add(lAnalitikaMK);
-//		analitikaMK.add(txtAMK);
-//		analitikaMK.add(btn3);
-//		
-//		//poslovna godina
-//		
-//		JLabel lPosGod = new JLabel("Poslovna godina");
-//		txtPosGod = new JTextField(6);
-//		txtPosGod.setEditable(false);
-//		
-//		poslovnaGodina.add(lPosGod);
-//		poslovnaGodina.add(txtPosGod);
-		
+		magacin.add(btnMagacin);
 		
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
-		JPanel nazivArtikla = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel artikal = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JPanel pakovanje = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JPanel sifraArtikla = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-		//naziv artikla
+		//artikal
 		JLabel lArtikal = new JLabel("Artikal");
 		txtArtikal = new JTextField(10);
 		txtArtikal.setEditable(false);
 		txtArtikal.setText(MKartikal);
 		selectedArtikal=MKartikalId;
 		
-		JButton btnArtikal = new JButton("...");
+		
 		btnArtikal.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ArtikalForm af=new ArtikalForm(selectedMagacin);				
-				af.setVisible(true);
-				
-				try {
-					Artikal a=af.artikal;
-					txtArtikal.setText(a.getNaziv());
-					selectedArtikal=a.getId().toString();
-				} catch (NullPointerException e2) {
+				if(selectedPG!=null){
+					ArtikalForm af=new ArtikalForm(selectedMagacin, null, selectedPG);				
+					af.setVisible(true);
 					
-				}
-				
+					try {
+						Artikal a=af.artikal;
+						txtArtikal.setText(a.getNaziv());
+						selectedArtikal=a.getId().toString();
+						if(selectedPG!=null)
+							tableModel.open(selectedMagacin, selectedArtikal, selectedPG);
+					} catch (NullPointerException e2) {
+						
+					}
+					
+			
+				}else
+					JOptionPane.showMessageDialog(AMKForm.this, "Morate selektovati poslovnu godinu!");
 			}
 		});
 
@@ -211,9 +263,9 @@ public class AMKForm extends JDialog {
 		btnArtikal.setPreferredSize(btnArtikal.getSize());
 		btnArtikal.setMaximumSize(btnArtikal.getSize());
 
-		nazivArtikla.add(lArtikal);
-		nazivArtikla.add(txtArtikal);
-		nazivArtikla.add(btnArtikal);
+		artikal.add(lArtikal);
+		artikal.add(txtArtikal);
+		artikal.add(btnArtikal);
 
 		//pakovanje
 //		JLabel lPakovanje = new JLabel("Pakovanje");
@@ -243,16 +295,16 @@ public class AMKForm extends JDialog {
 
 		verticalBox2.add(Box.createVerticalStrut(15));
 
-		verticalBox2.add(nazivArtikla);
+		verticalBox2.add(artikal);
 
 		Box verticalBox = new Box(BoxLayout.Y_AXIS);
 		Box horizontalBox = new Box(BoxLayout.X_AXIS);
 
+		horizontalBox.add(poslovnaGodina);
 		horizontalBox.add(sektor);
 
 		horizontalBox.add(magacin);
 		horizontalBox.add(analitikaMK);
-		horizontalBox.add(poslovnaGodina);
 
 		verticalBox.add(horizontalBox);
 		verticalBox.add(verticalBox2);
@@ -261,13 +313,17 @@ public class AMKForm extends JDialog {
 		
 		//////////////////////////////////////////////////
 
-		tableModel = new AnalitikaMKTableModel(new String[] { "Rb. R.",
-				"Naziv R/U", "Kolicina", "Cena Bez PDV-a", "Rabat (%)",
-				"Osnovica", "PDV (%)", "PDV Iznos", "Ukupan Iznos" }, 0);
+		tableModel = new AnalitikaMKTableModel(new String[] {
+				"Smer", "Kolicina", "Vrednost", "Vrsta",
+				"Tip", "Pocetna kolicina", "Ukupna kolicina", "Pocetna vrednost", "Ukupna vrednsot", "Prosecna cena", "Zadnja nabavna cena",
+				"Maloprodajana cena",  "Zadnja prodajna cena"}, 0);
 
 		table = new JTable(tableModel);
 		table.getTableHeader().setReorderingAllowed(false);
-
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		if(MKmagacinId !=null && MKartikalId!=null)
+			tableModel.open(MKmagacinId, MKartikalId, MKPGId);
+		
 		JScrollPane scrollPane = new JScrollPane(table);
 
 		JPanel bottomPanel = new JPanel(new BorderLayout());
@@ -288,66 +344,115 @@ public class AMKForm extends JDialog {
 	private void initToolbar(){
 
 		toolBar = new JToolBar();
-		btnSearch = new JButton(new SearchAction(this));
-		toolBar.add(btnSearch);
-
-
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
-
-		btnPickup = new JButton(new PickupAction(this));
-		toolBar.add(btnPickup);
-
-
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
-
-
+//		btnSearch = new JButton(new SearchAction(this));
+//		toolBar.add(btnSearch);
+//
+//
+//		btnRefresh = new JButton(new RefreshAction());
+//		toolBar.add(btnRefresh);
+//
+//		btnPickup = new JButton(new PickupAction(this));
+//		toolBar.add(btnPickup);
+//
+//
+//		btnHelp = new JButton(new HelpAction());
+//		toolBar.add(btnHelp);
 		toolBar.addSeparator(new Dimension(50, 0));
-		btnFirst = new JButton(new FirstAction(this));
-		toolBar.add(btnFirst);
-		btnFirst.addActionListener(new ActionListener() {
+		
+		btnReport=new JButton(new PrintAction(this));
+		toolBar.add(btnReport);
+		btnReport.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-//				goFirst();
+				if(selectedArtikal!=null || selectedPG!=null){
+
+					Map<String, Object> params=new HashMap();
+					params.put("artikal_id", selectedArtikal);
+					params.put("magacin_id", selectedMagacin);
+					params.put("pg", selectedPG);
+					try {
+						JasperPrint	jp = JasperFillManager
+								.fillReport(
+										getClass().getResource(
+												"/report/analitikaMK.jasper")
+												.openStream(), params,
+										DBConnection.getConnection());
+						
+	
+						JasperViewer jv = new JasperViewer(jp, false);
+						jv.setTitle("Analitika magacinske kartice");
+						getModalExclusionType();
+						jv.setModalExclusionType(ModalExclusionType.APPLICATION_EXCLUDE);
+						jv.setSize(1450, 900);
+						jv.setVisible(true);
+					} catch (JRException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+	
+	
 				
+				}else
+					JOptionPane.showMessageDialog(AMKForm.this, "Morate selektovati artika i poslovnu godinu da biste prikazali izvestaj!");
 			}
 		});
 
-		btnPrevious = new JButton(new PreviousAction(this));
-		toolBar.add(btnPrevious);
-		btnPrevious.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goPrevious();
-				
-			}
-		});
-
-		btnNext = new JButton(new NextAction(this));
-		toolBar.add(btnNext);
-		btnNext.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goNext();
-				
-			}
-		});
-
-		btnLast = new JButton(new LastAction(this));
-		toolBar.add(btnLast);
-		btnLast.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goLast();
-				
-			}
-		});
+//		toolBar.addSeparator(new Dimension(50, 0));
+//		btnFirst = new JButton(new FirstAction(this));
+//		toolBar.add(btnFirst);
+//		btnFirst.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goFirst();
+//				
+//			}
+//		});
+//
+//		btnPrevious = new JButton(new PreviousAction(this));
+//		toolBar.add(btnPrevious);
+//		btnPrevious.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goPrevious();
+//				
+//			}
+//		});
+//
+//		btnNext = new JButton(new NextAction(this));
+//		toolBar.add(btnNext);
+//		btnNext.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goNext();
+//				
+//			}
+//		});
+//
+//		btnLast = new JButton(new LastAction(this));
+//		toolBar.add(btnLast);
+//		btnLast.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goLast();
+//				
+//			}
+//		});
 		add(toolBar, BorderLayout.NORTH);
+	}
+	
+	private Image setImage(){
+		ImageIcon icon1 = new ImageIcon(getClass().getResource(
+				"/img/magacin.png"));
+		Image img1 = icon1.getImage();
+		return img1;
 	}
 
 

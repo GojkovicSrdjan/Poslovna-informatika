@@ -5,6 +5,7 @@ public class PoslovnaGodina {
 	Integer id;
 	Integer godina;
 	Integer PIB;
+	boolean zakljucena;
 	
 	public PoslovnaGodina() {
 		super();
@@ -33,6 +34,14 @@ public class PoslovnaGodina {
 
 	public void setPIB(Integer pIB) {
 		PIB = pIB;
+	}
+
+	public boolean isZakljucena() {
+		return zakljucena;
+	}
+
+	public void setZakljucena(boolean zakljucena) {
+		this.zakljucena = zakljucena;
 	}
 	
 	

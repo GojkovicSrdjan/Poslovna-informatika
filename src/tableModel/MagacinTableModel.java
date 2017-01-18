@@ -8,7 +8,7 @@ import java.sql.Statement;
 import javax.swing.table.DefaultTableModel;
 
 import db.DBConnection;
-import model.GrupaArtikala;
+import form.MainForm;
 import model.Magacin;
 
 public class MagacinTableModel extends DefaultTableModel {
@@ -18,7 +18,7 @@ public class MagacinTableModel extends DefaultTableModel {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	  private String basicQuery = "SELECT magacin_id, a.naziv, b.naziv as s FROM Magacin a, sektor b where a.sektor=b.sektor_id";
+	  private String basicQuery = "SELECT magacin_id, a.naziv, b.naziv as s FROM Magacin a, sektor b where a.sektor=b.sektor_id and b.pib="+MainForm.getInstance().selectedPred.getPIB();
 	  private String orderBy = " ORDER BY magacin_id";
 	
 	public MagacinTableModel(Object[] colNames, int rowCount){

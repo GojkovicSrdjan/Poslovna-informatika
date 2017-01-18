@@ -6,10 +6,12 @@ public class Preduzece {
 	String naziv;
 	Integer brTelefona;
 	String adresa;
+	String mesto;
+	
 	public Preduzece() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
+	
 	public Integer getPIB() {
 		return PIB;
 	}
@@ -33,6 +35,14 @@ public class Preduzece {
 	}
 	public void setAdresa(String adresa) {
 		this.adresa = adresa;
+	}
+
+	public String getMesto() {
+		return mesto;
+	}
+
+	public void setMesto(String mesto) {
+		this.mesto = mesto;
 	}
 	
 	

@@ -3,10 +3,9 @@ package model;
 public class Artikal {
 	
 	Integer id;
-	String pakovanje;
+	Double pakovanje;
 	String jedinicaMere;
 	String naziv;
-	String opis;
 	Integer grupaArtikalaID;
 	Integer stavkePopisaID;
 	
@@ -23,11 +22,11 @@ public class Artikal {
 		this.id = id;
 	}
 
-	public String getPakovanje() {
+	public Double getPakovanje() {
 		return pakovanje;
 	}
 
-	public void setPakovanje(String pakovanje) {
+	public void setPakovanje(Double pakovanje) {
 		this.pakovanje = pakovanje;
 	}
 
@@ -45,14 +44,6 @@ public class Artikal {
 
 	public void setNaziv(String naziv) {
 		this.naziv = naziv;
-	}
-
-	public String getOpis() {
-		return opis;
-	}
-
-	public void setOpis(String opis) {
-		this.opis = opis;
 	}
 
 	public Integer getGrupaArtikalaID() {

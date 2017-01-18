@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="analitikaMK" language="groovy" pageWidth="1100" pageHeight="595" orientation="Landscape" columnWidth="1060" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="daa63bba-2df1-4eb4-bc2a-e8e6043f5083">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="artikal_id" class="java.lang.String"/>
+	<parameter name="magacin_id" class="java.lang.String"/>
+	<parameter name="pg" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+     Prometni_dokument."datum knjizenja" AS Prometni_dokument_datum_knjizenja,
+     Analitika_magacinske_kartice."smer" AS Analitika_magacinske_kartice_smer,
+     Analitika_magacinske_kartice."vrednost" AS Analitika_magacinske_kartice_vrednost,
+     Analitika_magacinske_kartice."kolicina" AS Analitika_magacinske_kartice_kolicina,
+     Analitika_magacinske_kartice."tip promene" AS Analitika_magacinske_kartice_tip_promene,
+     Tip_promene."naziv" AS Tip_promene_naziv,
+     Stavka_prometnog_dokumenta."cena" AS Stavka_prometnog_dokumenta_cena,
+     Magacinska_kartica."artikal" AS Magacinska_kartica_artikal,
+     Magacinska_kartica."magacin" AS Magacinska_kartica_magacin,
+     Magacinska_kartica."poslovna godina" AS Magacinska_kartica_poslovna_godina,
+     Magacinska_kartica."pocetna vrednost" AS Magacinska_kartica_pocetna_vrednost,
+     Magacinska_kartica."pocetna kolicina" AS Magacinska_kartica_pocetna_kolicina,
+     Status_dokumenta."naziv" AS Status_dokumenta_naziv,
+     Vrsta_dokumenta."naziv" AS Vrsta_dokumenta_naziv
+FROM
+     "dbo"."Prometni dokument" Prometni_dokument INNER JOIN "dbo"."Stavka prometnog dokumenta" Stavka_prometnog_dokumenta ON Prometni_dokument."pd_id" = Stavka_prometnog_dokumenta."prometni dokument"
+     INNER JOIN "dbo"."Analitika magacinske kartice" Analitika_magacinske_kartice ON Stavka_prometnog_dokumenta."rbr" = Analitika_magacinske_kartice."stavka prometnog dok"
+     INNER JOIN "dbo"."Tip promene" Tip_promene ON Analitika_magacinske_kartice."tip promene" = Tip_promene."tip_id"
+     INNER JOIN "dbo"."Magacinska kartica" Magacinska_kartica ON Analitika_magacinske_kartice."magacinska kartica" = Magacinska_kartica."mk_id"
+     INNER JOIN "dbo"."Vrsta dokumenta" Vrsta_dokumenta ON Analitika_magacinske_kartice."vrDok" = Vrsta_dokumenta."vrsta dokumenta id"
+     AND Vrsta_dokumenta."vrsta dokumenta id" = Prometni_dokument."vrsta dokumenta id"
+     INNER JOIN "dbo"."Status dokumenta" Status_dokumenta ON Prometni_dokument."status dokumenta" = Status_dokumenta."status dokumenta id"
+WHERE
+     Magacinska_kartica."artikal" = $P{artikal_id}
+     and Magacinska_kartica."magacin" = $P{magacin_id}
+     and Magacinska_kartica."poslovna godina" = $P{pg}]]>
+	</queryString>
+	<field name="Prometni_dokument_datum_knjizenja" class="java.lang.String"/>
+	<field name="Analitika_magacinske_kartice_smer" class="java.lang.String"/>
+	<field name="Analitika_magacinske_kartice_vrednost" class="java.math.BigDecimal"/>
+	<field name="Analitika_magacinske_kartice_kolicina" class="java.math.BigDecimal"/>
+	<field name="Analitika_magacinske_kartice_tip_promene" class="java.math.BigDecimal"/>
+	<field name="Tip_promene_naziv" class="java.lang.String"/>
+	<field name="Stavka_prometnog_dokumenta_cena" class="java.math.BigDecimal"/>
+	<field name="Magacinska_kartica_artikal" class="java.math.BigDecimal"/>
+	<field name="Magacinska_kartica_magacin" class="java.math.BigDecimal"/>
+	<field name="Magacinska_kartica_poslovna_godina" class="java.math.BigDecimal"/>
+	<field name="Magacinska_kartica_pocetna_vrednost" class="java.math.BigDecimal"/>
+	<field name="Magacinska_kartica_pocetna_kolicina" class="java.math.BigDecimal"/>
+	<field name="Status_dokumenta_naziv" class="java.lang.String"/>
+	<field name="Vrsta_dokumenta_naziv" class="java.lang.String"/>
+	<variable name="Ukupna vrednost" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("I") ? $V{Ukupna vrednost}.add(-$F{Analitika_magacinske_kartice_vrednost}) : $V{Ukupna vrednost}.add($F{Analitika_magacinske_kartice_vrednost})]]></variableExpression>
+		<initialValueExpression><![CDATA[$F{Magacinska_kartica_pocetna_vrednost}]]></initialValueExpression>
+	</variable>
+	<variable name="Ukupna kolicina" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("I") ? $V{Ukupna kolicina}.add(-$F{Analitika_magacinske_kartice_kolicina}) : $V{Ukupna kolicina}.add($F{Analitika_magacinske_kartice_kolicina})]]></variableExpression>
+		<initialValueExpression><![CDATA[$F{Magacinska_kartica_pocetna_kolicina}]]></initialValueExpression>
+	</variable>
+	<variable name="kol ulaza" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("U") ? ($V{kol ulaza}.add($F{Analitika_magacinske_kartice_kolicina})) : (0)]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="kol izlaza" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("I") ? ($V{kol izlaza}.add($F{Analitika_magacinske_kartice_kolicina})) : (0)]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="vr ulaza" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("U") ? ($V{vr ulaza}.add($F{Analitika_magacinske_kartice_vrednost})) : (0)]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="vr izlaza" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("I") ? ($V{vr izlaza}.add($F{Analitika_magacinske_kartice_vrednost})) : (0)]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="Vrsta" class="java.lang.String" incrementType="Column">
+		<variableExpression><![CDATA[$F{Vrsta_dokumenta_naziv}.equals("Primka") ? ("PR") : (($F{Vrsta_dokumenta_naziv}.equals("Otpremnica")? ("OT"): ("MM")))]]></variableExpression>
+	</variable>
+	<group name="Prometni_dokument_datum_knjizenja">
+		<groupExpression><![CDATA[$F{Prometni_dokument_datum_knjizenja}]]></groupExpression>
+	</group>
+	<group name="Stavka_prometnog_dokumenta_rbr">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="101" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="933" y="24" width="100" height="20" uuid="bc2eeb8c-a7b1-4bd0-be1c-e5e5db77af93"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="890" y="24" width="43" height="20" uuid="a9afd02c-2869-484b-9813-a4eb466bee52"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[Datum:]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="75" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="42" width="85" height="20" uuid="43a54850-781c-4361-b044-72a9aaf8ca4e"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Datum]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="100" y="30" width="41" height="33" uuid="e96d7117-da37-4afb-a89f-946de0bd5aba"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Vrsta dok.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="165" y="42" width="44" height="20" uuid="dddf04db-6c77-4926-95e2-8893918d7cdd"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Smer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="229" y="30" width="51" height="33" uuid="ba2e533d-1904-44bb-a52b-a909552a0016"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Pocetna kolicina]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="779" y="42" width="61" height="20" uuid="e405b63d-0887-4851-9d8d-be8f8cea6984"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Vr. ulaza]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="595" y="43" width="57" height="20" uuid="def25f95-81b1-4cf5-b631-905dc3395113"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Cena]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="475" y="42" width="104" height="20" uuid="16a05496-373e-42ba-9ae3-3328cbd76dca"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Ukupna kolicina]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="953" y="43" width="107" height="20" uuid="60fce0ec-98d4-465e-ac43-4170ec1212fd"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Ukupna vrednost]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="62" width="1060" height="1" uuid="99e641cb-0b76-44c0-ba0e-df826c457045"/>
+			</line>
+			<staticText>
+				<reportElement x="293" y="30" width="70" height="33" uuid="5da769c7-14f9-46bb-9d09-3edcf20c7a1c"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Kolicina ulaza]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="378" y="30" width="81" height="33" uuid="02bb29ae-a5ca-4c65-89ff-db7636103e5c"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Kolicina izlaza]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="378" y="30" width="81" height="33" uuid="02bb29ae-a5ca-4c65-89ff-db7636103e5c"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Kolicina izlaza]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="660" y="42" width="106" height="20" uuid="dd0e5375-32aa-492d-aa47-120a9a60b65d"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Pocetna vrednost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="871" y="42" width="61" height="20" uuid="6231afee-d2bd-4631-a29e-2b6a0062e1e8"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Vr. izlaza]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="31" splitType="Stretch">
+			<textField>
+				<reportElement x="953" y="0" width="107" height="20" uuid="945b7a47-37d1-46bd-8947-fdf7077bee51"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Ukupna vrednost}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="783" y="0" width="57" height="20" uuid="44479a16-e851-4934-8aec-e4c1a8ffa7cf"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("U") ? (($F{Analitika_magacinske_kartice_vrednost})) : (0)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="229" y="0" width="51" height="20" uuid="aef2c001-6142-4714-8d29-097efe345d2a"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Magacinska_kartica_pocetna_kolicina}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="595" y="0" width="57" height="20" uuid="cab36e31-9fab-4368-8676-016343201de3"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Stavka_prometnog_dokumenta_cena}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="165" y="0" width="44" height="20" uuid="dfc84d38-ede4-4d19-a40c-078aea6dce6e"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="0" width="41" height="20" uuid="80cecbc4-6e09-481c-97f8-416c2676c9b2"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Vrsta}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="85" height="20" uuid="5a6e4885-b0fa-4e0c-be1d-d27ad57f04c3"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Prometni_dokument_datum_knjizenja}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="475" y="0" width="104" height="20" uuid="d071dcce-fe22-4f24-9bcc-d299bcad7794"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Ukupna kolicina}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="293" y="0" width="70" height="20" uuid="fff9a651-7695-414b-8f4a-9a986acce272"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("U") ? (($F{Analitika_magacinske_kartice_kolicina})) : (0)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="378" y="0" width="81" height="20" uuid="84012a7d-092c-429d-ab4f-64245d9a535b"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("I") ? (($F{Analitika_magacinske_kartice_kolicina})) : (0)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="660" y="0" width="106" height="20" uuid="1cb93e4d-11ea-401d-893c-226f9f8bb6d4"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Magacinska_kartica_pocetna_vrednost}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="871" y="0" width="61" height="20" uuid="4d8fcd79-9ebc-49b6-afdd-faaeac112967"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Analitika_magacinske_kartice_smer}.equals("I") ? (($F{Analitika_magacinske_kartice_vrednost})) : (0)]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="51" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="49" splitType="Stretch">
+			<textField>
+				<reportElement x="1033" y="16" width="27" height="20" uuid="969d391d-9637-42ab-9b09-4360741a569c"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="69" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="23" width="1060" height="1" uuid="44f1bfdc-5308-423d-81bc-8a227eecb7a0"/>
+			</line>
+			<textField>
+				<reportElement x="953" y="34" width="107" height="20" uuid="5e6688c3-1d44-4a2b-b0be-7745774fa457"/>
+				<textElement textAlignment="Left">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Ukupna vrednost}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="475" y="34" width="104" height="20" uuid="a0fece2b-17e9-4d52-a0bd-20a826becebc"/>
+				<textElement textAlignment="Left">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Ukupna kolicina}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="10" y="34" width="85" height="20" uuid="c9aa3bc1-95fc-4da3-a790-6cee4048cd8f"/>
+				<textElement>
+					<font size="13" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Ukupno:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement x="293" y="34" width="70" height="20" uuid="92c4ac4a-9971-46ad-8379-78f05d92fb9d"/>
+				<textElement textAlignment="Left">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{kol ulaza}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="378" y="34" width="81" height="20" uuid="5905e1d7-2ce4-4561-bebe-5df280b31292"/>
+				<textElement textAlignment="Left">
+					<font size="14" isStrikeThrough="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{kol izlaza}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="783" y="34" width="61" height="20" uuid="3967db34-b34d-4401-86d4-b5fa9dc3e7dc"/>
+				<textElement textAlignment="Left">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{vr ulaza}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="871" y="34" width="61" height="20" uuid="46fa555b-3506-4418-aac7-e965bc8fedb5"/>
+				<textElement textAlignment="Left">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{vr izlaza}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

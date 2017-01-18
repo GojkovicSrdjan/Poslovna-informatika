@@ -1,10 +1,12 @@
 package form;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -59,8 +61,10 @@ public class SektorForm extends JDialog {
 	private int mode;
 	
 	public SektorForm() {
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
 		setLayout(new MigLayout("fill"));
 		setTitle("Sektor");
+		setIconImage(setImage());
 		setSize(new Dimension(800, 600));
 		setModal(true);
 		initToolbar();
@@ -91,18 +95,14 @@ public class SektorForm extends JDialog {
 		});
 		toolBar.add(btnSearch);
 
-
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
-
 		btnPickup = new JButton(new PickupAction(this));
 		btnPickup.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 					if(tblGrid.getSelectedRow()!=-1){
-						sektor.setId(Integer.parseInt(tfId.getText().trim()));
-						sektor.setNaziv(tfNaziv.getText().trim());
+						sektor.setId(Integer.parseInt((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 0)));
+						sektor.setNaziv((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 1));
 						setVisible(false);
 					}else
 						JOptionPane.showMessageDialog(SektorForm.this, "Morate selektovati red u koloni!");
@@ -110,10 +110,6 @@ public class SektorForm extends JDialog {
 			}
 		});
 		toolBar.add(btnPickup);
-
-
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
 
 
 		toolBar.addSeparator(new Dimension(50, 0));
@@ -184,19 +180,10 @@ public class SektorForm extends JDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JDialog.setDefaultLookAndFeelDecorated(true);
-			    int response = JOptionPane.showConfirmDialog(null, "Do you want to continue?", "Confirm",
-			        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-			    if (response == JOptionPane.NO_OPTION) {
+				if(JOptionPane.showConfirmDialog(SektorForm.this, "Da li ste sigurni?", "Brisanje", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
+					removeRow();
 			    	
-			    } else if (response == JOptionPane.YES_OPTION) {
-			    	removeRow();
-			    	
-			    } else if (response == JOptionPane.CLOSED_OPTION) {
-			     
-			    }
-				
-			}
+				}
 		});
 		
 		toolBar.add(btnDelete);
@@ -205,19 +192,9 @@ public class SektorForm extends JDialog {
 	}
 	
 	private void initTable(){
-		/*JScrollPane scrollPane = new JScrollPane(tblGrid);
-		add(scrollPane, "grow, wrap");*/
-		
-	      //Kreiranje tabele (atribut klase frmDrzave)
-			
-	      //Dodati u metodu za kreiranje tabele koja se  poziva iz konstruktora klase
-	      //frmDrzave:
-
-	      //Omogućavanje skrolovanja ubacivanjem tabele u ScrollPane
 	      JScrollPane scrollPane = new JScrollPane(tblGrid);      
 	      add(scrollPane, "wrap, grow");
 
-	      // Kreiranje TableModel-a, parametri: header-i kolona i broj redova 
 	      tableModel = new SektorTableModel(new String[] {"ID",   "Naziv", "Adresa"}, 0);
 	      tblGrid.setModel(tableModel);
 	      
@@ -240,13 +217,9 @@ public class SektorForm extends JDialog {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-
-	      //Dozvoljeno selektovanje redova
 	      tblGrid.setRowSelectionAllowed(true);
-	      //Ali ne i selektovanje kolona 
 	      tblGrid.setColumnSelectionAllowed(false);
 
-	      //Dozvoljeno selektovanje samo jednog reda u jedinici vremena 
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 	
@@ -265,13 +238,18 @@ public class SektorForm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(mode==MODE_ADD){
-					addRow();
+					if(tfNaziv.getText().trim().equals("") || tfAdresa.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(SektorForm.this, "Morate popuniti polja!");
+					else
+						addRow();
 				}else if(mode==MODE_EDIT){
-					editRow();
-				}else{
-					tableModel.setRowCount(0);
+					if(tfNaziv.getText().trim().equals("") || tfAdresa.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(SektorForm.this, "Morate popuniti polja!");
+					else
+						editRow();
+				}else
 					search();
-				}
+				
 					
 				
 			}
@@ -365,26 +343,28 @@ public class SektorForm extends JDialog {
 	 
 	 public void search(){
 		 sektor=new Sektor();
-		 sektor.setId(Integer.parseInt(tfId.getText().trim()));
 		 sektor.setNaziv(tfNaziv.getText().trim());
 		 sektor.setAdresa(tfAdresa.getText().trim());
 		 try {
+			if(!tfId.getText().trim().equals(""))
+				sektor.setId(Integer.parseInt(tfId.getText().trim()));
+
+			tableModel.setRowCount(0);
 			tableModel.search(sektor);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch(NumberFormatException e1){
+			JOptionPane.showMessageDialog(SektorForm.this, "Vrednost pretrage mora biti broj!");
 		}
 		 
 	 }
 	 
 	 private void removeRow() {
 		    int index = tblGrid.getSelectedRow(); 
-		    if (index == -1) //Ako nema selektovanog reda (tabela prazna)
-		      return;        // izlazak 
-		    //kada obrisemo tekuci red, selektovacemo sledeci (newindex):
+		    if (index == -1) 
+		      return;       
 		    int newIndex = index;  
 		    
-			//sem ako se obrise poslednji red, tada selektujemo prethodni
 		    if (index == tableModel.getRowCount() - 1) 
 		       newIndex--; 
 		    try {
@@ -428,5 +408,12 @@ public class SektorForm extends JDialog {
 
 		public Sektor getSektor(){
 			return sektor;
+		}
+		
+		private Image setImage(){
+			ImageIcon icon1 = new ImageIcon(getClass().getResource(
+					"/img/magacin.png"));
+			Image img1 = icon1.getImage();
+			return img1;
 		}
 }

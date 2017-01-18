@@ -1,10 +1,12 @@
 package form;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -56,8 +58,10 @@ public class GrupaArtikalaForm extends JDialog {
 	private int mode;
 	
 	public GrupaArtikalaForm() {
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
 		setLayout(new MigLayout("fill"));
 		setTitle("Grupa artikala");
+		setIconImage(setImage());
 		setSize(new Dimension(800, 600));
 		setModal(true);
 		initToolbar();
@@ -88,8 +92,8 @@ public class GrupaArtikalaForm extends JDialog {
 		toolBar.add(btnSearch);
 
 
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
+//		btnRefresh = new JButton(new RefreshAction());
+//		toolBar.add(btnRefresh);
 
 		btnPickup = new JButton(new PickupAction(this));
 		btnPickup.addActionListener(new ActionListener() {
@@ -98,8 +102,8 @@ public class GrupaArtikalaForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				if(tblGrid.getSelectedRow()!=-1){
 					ga=new GrupaArtikala();
-					ga.setId(Integer.parseInt(tfId.getText().trim()));
-					ga.setNazivGrupe(tfNazivGrupe.getText().trim());
+					ga.setId(Integer.parseInt((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 0)));
+					ga.setNazivGrupe((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 1));
 					setVisible(false);
 				
 				}else
@@ -108,9 +112,9 @@ public class GrupaArtikalaForm extends JDialog {
 		});
 		toolBar.add(btnPickup);
 
-
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
+//
+//		btnHelp = new JButton(new HelpAction());
+//		toolBar.add(btnHelp);
 
 
 		toolBar.addSeparator(new Dimension(50, 0));
@@ -181,17 +185,9 @@ public class GrupaArtikalaForm extends JDialog {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JDialog.setDefaultLookAndFeelDecorated(true);
-			    int response = JOptionPane.showConfirmDialog(null, "Do you want to continue?", "Confirm",
-			        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-			    if (response == JOptionPane.NO_OPTION) {
-			    	
-			    } else if (response == JOptionPane.YES_OPTION) {
-			    	removeRow();
-			    	
-			    } else if (response == JOptionPane.CLOSED_OPTION) {
-			     
-			    }
+				if(JOptionPane.showConfirmDialog(GrupaArtikalaForm.this, "Da li ste sigurni?", "Brisanje", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
+					removeRow();
+			    
 				
 			}
 		});
@@ -202,19 +198,9 @@ public class GrupaArtikalaForm extends JDialog {
 	}
 	
 	private void initTable(){
-		/*JScrollPane scrollPane = new JScrollPane(tblGrid);
-		add(scrollPane, "grow, wrap");*/
-		
-	      //Kreiranje tabele (atribut klase frmDrzave)
-			
-	      //Dodati u metodu za kreiranje tabele koja se  poziva iz konstruktora klase
-	      //frmDrzave:
-
-	      //Omogućavanje skrolovanja ubacivanjem tabele u ScrollPane
 	      JScrollPane scrollPane = new JScrollPane(tblGrid);      
 	      add(scrollPane, "wrap, grow");
 
-	      // Kreiranje TableModel-a, parametri: header-i kolona i broj redova 
 	      tableModel = new GrupaArtikalaTableModel(new String[] {"ID",   "Naziv grupe"}, 0);
 	      tblGrid.setModel(tableModel);
 	      
@@ -238,12 +224,9 @@ public class GrupaArtikalaForm extends JDialog {
 			e.printStackTrace();
 		} 
 
-	      //Dozvoljeno selektovanje redova
 	      tblGrid.setRowSelectionAllowed(true);
-	      //Ali ne i selektovanje kolona 
 	      tblGrid.setColumnSelectionAllowed(false);
-
-	      //Dozvoljeno selektovanje samo jednog reda u jedinici vremena 
+	      
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 	
@@ -262,11 +245,16 @@ public class GrupaArtikalaForm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(mode==MODE_ADD){
-					addRow();
+					if(tfNazivGrupe.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(GrupaArtikalaForm.this, "Morate uneti naziv grupe!");
+					else
+						addRow();
 				}else if(mode==MODE_EDIT){
-					editRow();
+					if(tfNazivGrupe.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(GrupaArtikalaForm.this, "Morate uneti naziv grupe!");
+					else
+						editRow();
 				}else{
-					tableModel.setRowCount(0);
 					search();
 				}
 					
@@ -353,25 +341,30 @@ public class GrupaArtikalaForm extends JDialog {
 	 
 	 public void search(){
 		 ga=new GrupaArtikala();
-		 ga.setId(Integer.parseInt(tfId.getText().trim()));
+		
 		 ga.setNazivGrupe(tfNazivGrupe.getText().trim());
 		 try {
+			 if(!tfId.getText().trim().equals(""))
+				 ga.setId(Integer.parseInt(tfId.getText().trim()));
+
+			tableModel.setRowCount(0);
 			tableModel.search(ga);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch(NumberFormatException e1){
+			JOptionPane.showMessageDialog(GrupaArtikalaForm.this, "Vrednost pretrage mora biti broj!");
 		}
 		 
 	 }
 	 
 	 private void removeRow() {
 		    int index = tblGrid.getSelectedRow(); 
-		    if (index == -1) //Ako nema selektovanog reda (tabela prazna)
-		      return;        // izlazak 
-		    //kada obrisemo tekuci red, selektovacemo sledeci (newindex):
+		    if (index == -1) 
+		      return;        
+		    
 		    int newIndex = index;  
 		    
-			//sem ako se obrise poslednji red, tada selektujemo prethodni
+		    
 		    if (index == tableModel.getRowCount() - 1) 
 		       newIndex--; 
 		    try {
@@ -410,6 +403,13 @@ public class GrupaArtikalaForm extends JDialog {
 				tblGrid.setRowSelectionInterval(tblGrid.getSelectedRow() -1, tblGrid.getSelectedRow() -1);
 			else
 				tblGrid.setRowSelectionInterval(rowCount - 1, rowCount - 1);
+		}
+		
+		private Image setImage(){
+			ImageIcon icon1 = new ImageIcon(getClass().getResource(
+					"/img/magacin.png"));
+			Image img1 = icon1.getImage();
+			return img1;
 		}
 
 }

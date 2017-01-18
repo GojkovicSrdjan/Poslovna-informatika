@@ -1,5 +1,6 @@
 package tableModel;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -53,16 +54,39 @@ public class MagacinskaKarticaTableModel extends DefaultTableModel {
 	  } 
 	
 	  
-	  public MagacinskaKartica openAsChild(String artikal){
-		  String sqlStmt=basicQuery+"where artikal= "+artikal;
+	  public MagacinskaKartica openAsChild(String artikal, String magacin, String poslovnaGod) throws SQLException{
+		  String sqlStmt=basicQuery+"where artikal= "+artikal+" and magacin="+magacin+ " and [poslovna godina]="+poslovnaGod;
 		  MagacinskaKartica mk=new MagacinskaKartica();
-		  try {
+		  
 			mk=fillData(sqlStmt+orderBy);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		  return mk;
 	  }
 	  
+	  public void nivelacija(MagacinskaKartica mk, Double zadnjaCena) throws SQLException{
+		  addStavkaNivelacije(mk, zadnjaCena);
+		  PreparedStatement stmt=DBConnection.getConnection().prepareStatement("Update [magacinska kartica] set [zadnja prodajna cena]=? where mk_id=?");
+		  stmt.setDouble(1, mk.getZadnjaProdajnaCena());
+		  stmt.setInt(2, mk.getId());
+		  stmt.executeUpdate();
+		  DBConnection.getConnection().commit();
+		  stmt.close();
+	  }
+	  
+	  private void addStavkaNivelacije(MagacinskaKartica mk, Double zc) throws SQLException{
+		  PreparedStatement stmt=DBConnection.getConnection().prepareStatement("Insert into [Analitika magacinske kartice] ([vrednost], [smer], [magacinska kartica], [tip promene]) values(?,?,?,?)");
+		  if(zc>mk.getZadnjaProdajnaCena())
+			  stmt.setDouble(1, (zc- mk.getZadnjaProdajnaCena())*(mk.getPocetnaKolicina()-mk.getKolicinaIzlaza()+mk.getKolicinaUlaza()));
+		  else
+			  stmt.setDouble(1, (mk.getZadnjaProdajnaCena()-zc)*(mk.getPocetnaKolicina()-mk.getKolicinaIzlaza()+mk.getKolicinaUlaza()));
+		  
+		  stmt.setString(2, "U");
+		  stmt.setInt(3, mk.getId());
+		  stmt.setInt(4, 4);
+		  
+		  stmt.executeUpdate();
+		  stmt.close();
+		  DBConnection.getConnection().commit();
+		  
+	  }
 }

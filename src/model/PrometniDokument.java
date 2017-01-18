@@ -4,13 +4,14 @@ import java.util.Date;
 
 public class PrometniDokument {
 	Integer id;
-	Integer brojMagacina;
+	Integer magacinID;
 	Date datumNastanka;
 	Date datumKnjizenja;
-	String statusDokumenta;
+	Integer statusDokumenta;
 	Integer poslovnaGodID;
 	Integer poslovniPartnerID;
-	String vrstaDokumenta;
+	Integer vrstaDokumenta;
+	
 	public PrometniDokument() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -21,11 +22,11 @@ public class PrometniDokument {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-	public Integer getBrojMagacina() {
-		return brojMagacina;
+	public Integer getMagacinID() {
+		return magacinID;
 	}
-	public void setBrojMagacina(Integer brojMagacina) {
-		this.brojMagacina = brojMagacina;
+	public void setMagacinID(Integer magacinID) {
+		this.magacinID = magacinID;
 	}
 	public Date getDatumNastanka() {
 		return datumNastanka;
@@ -39,10 +40,10 @@ public class PrometniDokument {
 	public void setDatumKnjizenja(Date datumKnjizenja) {
 		this.datumKnjizenja = datumKnjizenja;
 	}
-	public String getStatusDokumenta() {
+	public Integer getStatusDokumenta() {
 		return statusDokumenta;
 	}
-	public void setStatusDokumenta(String statusDokumenta) {
+	public void setStatusDokumenta(Integer statusDokumenta) {
 		this.statusDokumenta = statusDokumenta;
 	}
 	public Integer getPoslovnaGodID() {
@@ -57,10 +58,10 @@ public class PrometniDokument {
 	public void setPoslovniPartnerID(Integer poslovniPartnerID) {
 		this.poslovniPartnerID = poslovniPartnerID;
 	}
-	public String getVrstaDokumenta() {
+	public Integer getVrstaDokumenta() {
 		return vrstaDokumenta;
 	}
-	public void setVrstaDokumenta(String vrstaDokumenta) {
+	public void setVrstaDokumenta(Integer vrstaDokumenta) {
 		this.vrstaDokumenta = vrstaDokumenta;
 	}
 	

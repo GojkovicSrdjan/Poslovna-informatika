@@ -5,24 +5,24 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
@@ -40,6 +40,7 @@ import actions.SearchAction;
 import model.Artikal;
 import model.Magacin;
 import model.MagacinskaKartica;
+import model.PoslovnaGodina;
 import model.Sektor;
 import tableModel.MagacinskaKarticaTableModel;
 
@@ -62,22 +63,25 @@ public class MagacinskaKarticaForm extends JDialog {
 	public JTextField txtPakovanje;
 	public JLabel pcLb, mpLb, zncLb, nazivStrankeLabelSUP, zpcLb, pskLb,
 	psvLb, pukLb, puvLb, pikLb, pivLb, ukkLb, ukvLb, unLb, ukLb, uvLb, rkLb, vpZKCLb,
-	magacinLabel, sektorLabel, artikalLabel;
+	magacinLabel, sektorLabel, artikalLabel, pgLabel;
 	public JTextField txtPozivNaBroj, pcTf, mpTf, pskTf, psvTf, pukTf, puvTf,
 	pikTf, pivTf, ukkTf, ukvTf, unTf, ukTf, uvTf, rkTf, vpZKCTf,
-	zncTf, nazivStrankeTextFieldSUP, zpcTf;
-	public JButton commit,sektorButton, magacinButton, artikalButton;
+	zncTf, nazivStrankeTextFieldSUP, zpcTf, pgTf;
+	public JButton commit,sektorButton, magacinButton, artikalButton, pgButton, nivelacijaButton, sacuvajButton;
 	
 	private MagacinskaKarticaTableModel tableModel=new MagacinskaKarticaTableModel();
 	private JButton btnAdd, btnCommit, btnDelete, btnFirst, btnLast, btnHelp, btnNext, btnNextForm,
 	btnPickup, btnRefresh, btnRollback, btnSearch, btnPrevious;
 	private JToolBar toolBar;
-	public String currentSektor, currentMagacin, currentArtikal;
+	public String currentSektor, currentMagacin, currentArtikal, currentPG;
+	public PoslovnaGodina pg;
 	public MagacinskaKartica mk;
 	
 	public MagacinskaKarticaForm(){
-		setSize(700, 650);
-		setTitle("Analitika magacinske kartice");
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
+		setSize(850, 650);
+		setTitle("Magacinska kartica");
+		setIconImage(setImage());
 		setModal(true);
 		setLocationRelativeTo(null);
 		initToolbar();
@@ -86,7 +90,7 @@ public class MagacinskaKarticaForm extends JDialog {
 	
 	private void initContentPanel(){
 		JPanel contentPanel, leftContentPanel1, leftContentPanel2, leftContentPanel3,
-			leftContentPanel4, rightContentPanel, cenaPanel, kolVredPanel;
+			leftContentPanel4, leftContentPanel5, rightContentPanel, cenaPanel, kolVredPanel;
 		Box leftVertBox, rightVertBox, lokUProHorBox, lokUProHorBox1, lokUProHorBox2,
 			strUProHorBox, Box2, Box3, Box4, Box5, Box6, Box7, Box8;
 		
@@ -101,9 +105,54 @@ public class MagacinskaKarticaForm extends JDialog {
 				leftContentPanel1 = new JPanel();
 				leftContentPanel1.setLayout(new FlowLayout(FlowLayout.CENTER));
 				{
-					JSeparator separator = new JSeparator();
+//					JSeparator separator = new JSeparator();
+//					leftContentPanel1.add(separator);
 					
-					leftContentPanel1.add(separator);
+					//Poslovna godina
+					pgLabel=new JLabel("Poslovna godina:");
+					
+					pgTf=new JTextField(5);
+					pgTf.setEditable(false);
+					
+					pgButton=new JButton("...");
+					pgButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							PoslovnaGodinaDialog pgd=new PoslovnaGodinaDialog(null);
+							pgd.setVisible(true);
+							
+							try{
+								pg=pgd.pg;
+								pgTf.setText(pg.getGodina().toString());
+								currentPG=pg.getId().toString();
+								if(currentArtikal!=null){
+									try {
+										mk=tableModel.openAsChild(currentArtikal, currentMagacin, currentPG);
+									} catch (SQLException e1) {
+										e1.printStackTrace();
+									}
+									fill();
+								}
+							}catch(NullPointerException e1){
+								
+							}
+						}
+					});
+					
+					pgButton.setSize(18, 20);
+					pgButton.setPreferredSize(pgButton.getSize());
+					pgButton.setMaximumSize(pgButton.getSize());
+					pgLabel.setLabelFor(pgTf);
+					leftContentPanel1.add(pgLabel);
+					leftContentPanel1.add(pgTf);
+					leftContentPanel1.add(pgButton);
+					
+					leftContentPanel1.add(Box.createHorizontalStrut(40));
+					
+					//Magacin button
+					magacinButton = new JButton("...");
+					magacinButton.setEnabled(false);
 					
 					//Sektor
 					sektorLabel = new JLabel();
@@ -124,6 +173,14 @@ public class MagacinskaKarticaForm extends JDialog {
 								Sektor s=sf.getSektor();
 								currentSektor=s.getId().toString();
 								sektorTextField.setText(s.getNaziv());
+								magacinButton.setEnabled(true);
+								
+								//izmena vrednosti
+								magacinTextField.setText("");
+								currentMagacin=null;
+								artikalButton.setEnabled(false);
+								artikalTextField.setText("");
+								currentArtikal=null;
 							}catch(NullPointerException e1){
 								
 							}
@@ -143,11 +200,14 @@ public class MagacinskaKarticaForm extends JDialog {
 					JSeparator separator1 = new JSeparator();
 					leftContentPanel1.add(separator1);
 					
+					//Artikal button
+					artikalButton = new JButton("...");
+					artikalButton.setEnabled(false);
+					
 					//Magacin
 					magacinLabel = new JLabel();
 					magacinTextField = new JTextField(5);
 					leftContentPanel1.add(magacinLabel);
-					magacinButton = new JButton("...");
 					magacinTextField.setEditable(false);
 					
 					magacinButton.addActionListener(new ActionListener() {
@@ -161,7 +221,11 @@ public class MagacinskaKarticaForm extends JDialog {
 								Magacin m=mf.magacin;
 								currentMagacin=m.getId().toString();
 								magacinTextField.setText(m.getNaziv());
+								artikalButton.setEnabled(true);
 								
+								//izmena vrednosti
+								artikalTextField.setText("");
+								currentArtikal=null;
 							}catch(NullPointerException e1){
 								
 							}
@@ -187,24 +251,33 @@ public class MagacinskaKarticaForm extends JDialog {
 					leftContentPanel1.add(artikalLabel);
 					artikalTextField.setEditable(false);
 					
-					artikalButton = new JButton("...");
 					artikalButton.addActionListener(new ActionListener() {
 						
 						@Override
 						public void actionPerformed(ActionEvent e) {
-							ArtikalForm af=new ArtikalForm(currentMagacin);				
-							af.setVisible(true);
-							
-							try {
-								Artikal a=af.artikal;
-								artikalTextField.setText(a.getNaziv());
-								currentArtikal=a.getId().toString();
-								mk=tableModel.openAsChild(currentArtikal);
-								fill();
-							} catch (NullPointerException e2) {
+							if(currentPG!=null){
+								ArtikalForm af=new ArtikalForm(currentMagacin, null, currentPG);				
+								af.setVisible(true);
 								
-							}
-							
+								try {
+									Artikal a=af.artikal;
+									artikalTextField.setText(a.getNaziv());
+									currentArtikal=a.getId().toString();
+									if(currentPG!=null){
+										mk=tableModel.openAsChild(currentArtikal, currentMagacin, currentPG);
+										fill();
+									}
+								} catch (NullPointerException e2) {
+									
+								} catch (SQLException e1) {
+									// TODO Auto-generated catch block
+									e1.printStackTrace();
+								}
+								
+						}
+						
+						else
+							JOptionPane.showMessageDialog(MagacinskaKarticaForm.this, "Morate selektovati poslovnu godinu!");
 						}
 					});
 					
@@ -221,7 +294,31 @@ public class MagacinskaKarticaForm extends JDialog {
 				}
 				leftVertBox.add(leftContentPanel1);
 				//END Left Content Panel 2
-				
+//				
+//				leftContentPanel5=new JPanel();
+//				leftContentPanel5.setLayout(new FlowLayout(FlowLayout.CENTER));
+//				{
+//					
+//				}
+//				leftVertBox.add(leftContentPanel5);
+//				
+				rightContentPanel=new JPanel();
+				rightContentPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+				{
+					nivelacijaButton=new JButton("Izvrsi nivelaciju");
+					nivelacijaButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							zpcTf.setEditable(true);
+							zpcTf.requestFocus();
+							sacuvajButton.setVisible(true);
+						}
+					});
+					nivelacijaButton.setVisible(false);
+					rightContentPanel.add(nivelacijaButton);
+				}
+				leftVertBox.add(rightContentPanel);
 				//START Left Content Panel 3
 				leftContentPanel3 = new JPanel();
 				leftContentPanel3.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -246,7 +343,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									pcLb = new JLabel();
 									pcLb.setText("Prosecna cena:");
 									pcTf = new JTextField(10);
-									
+									pcTf.setEditable(false);
 									Component horizontalStrut = Box.createHorizontalStrut(20);
 									lokUProSubPanel1.add(horizontalStrut);
 									
@@ -264,6 +361,7 @@ public class MagacinskaKarticaForm extends JDialog {
 								//
 								mpLb.setText("Maloprodajna cena:");
 								mpTf = new JTextField(10);
+								mpTf.setEditable(false);
 								lokUProSubPanel1.add(mpTf);
 								mpLb.setLabelFor(mpTf);
 								
@@ -283,7 +381,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									zncLb = new JLabel();
 									zncTf = new JTextField(10);
 									lokUProSubPanel2.add(zncLb);
-									//
+									zncTf.setEditable(false);
 									zncLb.setText("Zadnja nabavna cena:");
 									zncLb.setLabelFor(zncTf);
 									lokUProSubPanel2.add(zncTf);
@@ -293,6 +391,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									//Zadnja prodajna cena
 									zpcLb=new JLabel("Zadnja prodajana cena:");
 									zpcTf=new JTextField(10);
+									zpcTf.setEditable(false);
 									lokUProSubPanel2.add(zpcLb);
 									lokUProSubPanel2.add(zpcTf);
 								}
@@ -336,12 +435,13 @@ public class MagacinskaKarticaForm extends JDialog {
 									pskTf=new JTextField(10);
 									subPanel2.add(pskLb);
 									subPanel2.add(pskTf);
-									
+									pskTf.setEditable(false);
 									subPanel2.add(Box.createHorizontalStrut(65));
 									
 									//Pocetno stanje vrednosno
 									psvLb=new JLabel("Pocetno stanje vrednosno:");
 									psvTf=new JTextField(10);
+									psvTf.setEditable(false);
 									subPanel2.add(psvLb);
 									subPanel2.add(psvTf);
 								}
@@ -361,7 +461,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									//Promet ulaza kolicninski
 									pukLb = new JLabel("Promet ulaza kolicninski:");
 									pukTf = new JTextField(10);
-									
+									pukTf.setEditable(false);
 									JSeparator separator = new JSeparator();
 									subPanel3.add(separator);
 									subPanel3.add(pukLb);
@@ -372,6 +472,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									//Promet ulaza vrednosno
 									puvLb=new JLabel("Promet ulaza vrednosno:");
 									puvTf=new JTextField(10);
+									puvTf.setEditable(false);
 									subPanel3.add(puvLb);
 									subPanel3.add(puvTf);
 									
@@ -391,7 +492,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									//Promet izlaza kolicinski
 									pikLb=new JLabel("Promet izlaza kolicinski:");
 									pikTf=new JTextField(10);
-									
+									pikTf.setEditable(false);
 									Component horizontalStrut = Box.createHorizontalStrut(6);
 									subPanel4.add(horizontalStrut);
 									subPanel4.add(pikLb);
@@ -402,6 +503,7 @@ public class MagacinskaKarticaForm extends JDialog {
 									//Promet izlaza vrednosno
 									pivLb=new JLabel("Promet izlaza vrednosno:");
 									pivTf=new JTextField(10);
+									pivTf.setEditable(false);
 									subPanel4.add(pivLb);
 									subPanel4.add(pivTf);
 									
@@ -409,61 +511,7 @@ public class MagacinskaKarticaForm extends JDialog {
 								Box4.add(subPanel4);
 							}
 							strUProHorBox.add(Box4);
-							//End box4
-							
-							
-							//Start box5
-							Box5=new Box(BoxLayout.X_AXIS);
-							{
-								JPanel subPanel5=new JPanel();
-								subPanel5.setLayout(new FlowLayout(FlowLayout.LEFT));
-								{
-									
-									//Ukupna korekcija kolicine
-									ukkLb=new JLabel("Ukupna korekcija kolicine:");
-									ukkTf=new JTextField(10);
-									subPanel5.add(ukkLb);
-									subPanel5.add(ukkTf);
-									
-									subPanel5.add(Box.createHorizontalStrut(50));
-									
-									//Ukupna korigovana vrednost
-									ukvLb=new JLabel("Ukupna korigovana vrednost:");
-									ukvTf=new JTextField(10);
-									subPanel5.add(ukvLb);
-									subPanel5.add(ukvTf);
-									
-									
-								}
-								Box5.add(subPanel5);
-							}
-							strUProHorBox.add(Box5);
-							//End box5
-							
-							
-							
-							//Start box6
-							Box6=new Box(BoxLayout.X_AXIS);
-							{
-								JPanel subPanel6=new JPanel();
-								subPanel6.setLayout(new FlowLayout(FlowLayout.LEFT));
-								{
-									subPanel6.add(Box.createHorizontalStrut(42));
-									
-									//Ukupna nivelacija
-									unLb=new JLabel("Ukupna nivelacija:");
-									unTf=new JTextField(10);
-									subPanel6.add(unLb);
-									subPanel6.add(unTf);
-									
-								}
-								Box6.add(subPanel6);
-							}
-							
-							strUProHorBox.add(Box6);
-							//End box4
-							
-							
+							//End box4				
 							
 						}
 						kolVredPanel.add(strUProHorBox);
@@ -495,7 +543,7 @@ public class MagacinskaKarticaForm extends JDialog {
 						//Ukupna kolicina
 						ukLb=new JLabel("Ukupna kolicina:");
 						ukTf=new JTextField(10);
-						
+						ukTf.setEditable(false);
 						Component horizontalStrut = Box.createHorizontalStrut(45);
 						subPanel7.add(horizontalStrut);
 						subPanel7.add(ukLb);
@@ -508,7 +556,7 @@ public class MagacinskaKarticaForm extends JDialog {
 						uvTf=new JTextField(10);
 						subPanel7.add(uvLb);
 						subPanel7.add(uvTf);
-						
+						uvTf.setEditable(false);
 						Box7.add(subPanel7);
 					}
 					
@@ -520,7 +568,33 @@ public class MagacinskaKarticaForm extends JDialog {
 					leftContentPanel2.add(sb);
 					
 				}
+
 				leftContentPanel4.add(leftContentPanel2);
+				
+				leftContentPanel5=new JPanel();
+				leftContentPanel5.setLayout(new FlowLayout(FlowLayout.RIGHT));
+				{
+					sacuvajButton=new JButton("Sacuvaj");
+					sacuvajButton.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							zpcTf.setEditable(false);
+							Double zc=mk.getZadnjaProdajnaCena();
+							mk.setZadnjaProdajnaCena(Double.parseDouble(zpcTf.getText().trim()));
+							sacuvajButton.setVisible(false);
+							nivelacijaButton.setVisible(false);
+							try {
+								tableModel.nivelacija(mk, zc);
+							} catch (SQLException e1) {
+								e1.printStackTrace();
+							}
+						}
+					});
+					sacuvajButton.setVisible(false);
+					leftContentPanel5.add(sacuvajButton);
+				}
+				leftContentPanel4.add(leftContentPanel5);
 				//END Left Content Panel 4
 			}
 			add(leftVertBox);
@@ -534,83 +608,83 @@ public class MagacinskaKarticaForm extends JDialog {
 	private void initToolbar(){
 
 		toolBar = new JToolBar();
-		btnSearch = new JButton(new SearchAction(this));
-		toolBar.add(btnSearch);
+//		btnSearch = new JButton(new SearchAction(this));
+//		toolBar.add(btnSearch);
+//
+//
+//		btnRefresh = new JButton(new RefreshAction());
+//		toolBar.add(btnRefresh);
+//
+//		btnPickup = new JButton(new PickupAction(this));
+//		toolBar.add(btnPickup);
+//
+//
+//		btnHelp = new JButton(new HelpAction());
+//		toolBar.add(btnHelp);
+//
+//
+//		toolBar.addSeparator(new Dimension(50, 0));
+//		btnFirst = new JButton(new FirstAction(this));
+//		toolBar.add(btnFirst);
+//		btnFirst.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goFirst();
+//				
+//			}
+//		});
+//
+//		btnPrevious = new JButton(new PreviousAction(this));
+//		toolBar.add(btnPrevious);
+//		btnPrevious.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goPrevious();
+//				
+//			}
+//		});
+//
+//		btnNext = new JButton(new NextAction(this));
+//		toolBar.add(btnNext);
+//		btnNext.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goNext();
+//				
+//			}
+//		});
+//
+//		btnLast = new JButton(new LastAction(this));
+//		toolBar.add(btnLast);
+//		btnLast.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+////				goLast();
+//				
+//			}
+//		});
+//		
+//		
+//
+//		toolBar.addSeparator(new Dimension(50, 0));
+//
+//
+//		btnAdd = new JButton(new AddAction(this));
+//		toolBar.add(btnAdd);
+//
+//
+//		btnDelete = new JButton(new DeleteAction(this));
+//		toolBar.add(btnDelete);
 
 
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
 
-		btnPickup = new JButton(new PickupAction(this));
-		toolBar.add(btnPickup);
+		toolBar.addSeparator(new Dimension(550, 0));
 
-
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
-
-
-		toolBar.addSeparator(new Dimension(50, 0));
-		btnFirst = new JButton(new FirstAction(this));
-		toolBar.add(btnFirst);
-		btnFirst.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goFirst();
-				
-			}
-		});
-
-		btnPrevious = new JButton(new PreviousAction(this));
-		toolBar.add(btnPrevious);
-		btnPrevious.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goPrevious();
-				
-			}
-		});
-
-		btnNext = new JButton(new NextAction(this));
-		toolBar.add(btnNext);
-		btnNext.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goNext();
-				
-			}
-		});
-
-		btnLast = new JButton(new LastAction(this));
-		toolBar.add(btnLast);
-		btnLast.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-//				goLast();
-				
-			}
-		});
-		
-		
-
-		toolBar.addSeparator(new Dimension(50, 0));
-
-
-		btnAdd = new JButton(new AddAction(this));
-		toolBar.add(btnAdd);
-
-
-		btnDelete = new JButton(new DeleteAction(this));
-		toolBar.add(btnDelete);
-
-
-
-		toolBar.addSeparator(new Dimension(50, 0));
-
-		btnNextForm = new JButton(new NextFormAction(this));
+		btnNextForm = new JButton("Analitika magacinske kartice");
 		toolBar.add(btnNextForm);
 		btnNextForm.addActionListener(new ActionListener() {
 			
@@ -618,7 +692,7 @@ public class MagacinskaKarticaForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				AMKForm amk=new AMKForm(sektorTextField.getText().trim(), currentSektor,
 						magacinTextField.getText().trim(), currentMagacin,
-						artikalTextField.getText().trim(), currentArtikal);
+						artikalTextField.getText().trim(), currentArtikal, pgTf.getText().trim(), currentPG);
 				setVisible(false);
 				amk.setVisible(true);
 				amk.setVisible(false);
@@ -651,8 +725,16 @@ public class MagacinskaKarticaForm extends JDialog {
 		ukkTf.setText(ukk.toString());
 		Double ukv=mk.getVrednostUlaza()-mk.getVrednostIzlaza();
 		ukvTf.setText(ukv.toString());
+		if(pg.isZakljucena()!=true)
+			nivelacijaButton.setVisible(true);
 		
+	
 	}
 	
-	
+	private Image setImage(){
+		ImageIcon icon1 = new ImageIcon(getClass().getResource(
+				"/img/magacin.png"));
+		Image img1 = icon1.getImage();
+		return img1;
+	}
 }

@@ -1,10 +1,12 @@
 package form;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -27,6 +29,7 @@ import actions.LastAction;
 import actions.NextAction;
 import actions.PickupAction;
 import actions.PreviousAction;
+import actions.PrintAction;
 import actions.RefreshAction;
 import actions.RollbackAction;
 import actions.SearchAction;
@@ -53,7 +56,7 @@ public class MagacinForm extends JDialog {
 	private JButton btnSektor=new JButton("...");
 	private MagacinTableModel tableModel;
 	private JTable tblGrid = new JTable(); 
-	
+	private String sektor;
 	public Magacin magacin=new Magacin();
 	
 	private static final int MODE_EDIT=1;
@@ -62,8 +65,11 @@ public class MagacinForm extends JDialog {
 	private int mode;
 	
 	public MagacinForm(String parentSektor) {
+		super(null, java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
+		sektor=parentSektor;
 		setLayout(new MigLayout("fill"));
 		setTitle("Magacin");
+		setIconImage(setImage());
 		setSize(new Dimension(800, 600));
 		setModal(true);
 		initToolbar();
@@ -102,29 +108,20 @@ public class MagacinForm extends JDialog {
 		});
 		toolBar.add(btnSearch);
 
-
-		btnRefresh = new JButton(new RefreshAction());
-		toolBar.add(btnRefresh);
-
 		btnPickup = new JButton(new PickupAction(this));
 		btnPickup.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(tblGrid.getSelectedRow()!=-1){
-					magacin.setId(Integer.parseInt(tfId.getText().trim()));
-					magacin.setNaziv(tfNaziv.getText().trim());
+					magacin.setId(Integer.parseInt((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 0)));
+					magacin.setNaziv((String) tableModel.getValueAt(tblGrid.getSelectedRow(), 1));
 					setVisible(false);
 				}else
 					JOptionPane.showMessageDialog(MagacinForm.this, "Morate selektovati red u koloni!");
 			}
 		});
 		toolBar.add(btnPickup);
-
-
-		btnHelp = new JButton(new HelpAction());
-		toolBar.add(btnHelp);
-
 
 		toolBar.addSeparator(new Dimension(50, 0));
 		btnFirst = new JButton(new FirstAction(this));
@@ -173,60 +170,43 @@ public class MagacinForm extends JDialog {
 		
 		toolBar.addSeparator(new Dimension(50, 0));
 		
-		btnAdd = new JButton(new AddAction(this));
-		btnAdd.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mode=MODE_ADD;
-				tfId.setEditable(false);
-				tfId.setText("");
-				tfNaziv.setText("");
-				tfSektor.setText("");
-				tfNaziv.requestFocusInWindow();
+		if(sektor==null){
+			btnAdd = new JButton(new AddAction(this));
+			btnAdd.addActionListener(new ActionListener() {
 				
-			}
-		});
-		toolBar.add(btnAdd);
-		
-		btnDelete = new JButton(new DeleteAction(this));
-		btnDelete.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					mode=MODE_ADD;
+					tfId.setEditable(false);
+					tfId.setText("");
+					tfNaziv.setText("");
+					tfSektor.setText("");
+					tfNaziv.requestFocusInWindow();
+					
+				}
+			});
+			toolBar.add(btnAdd);
 			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JDialog.setDefaultLookAndFeelDecorated(true);
-			    int response = JOptionPane.showConfirmDialog(null, "Do you want to continue?", "Confirm",
-			        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-			    if (response == JOptionPane.NO_OPTION) {
-			    	
-			    } else if (response == JOptionPane.YES_OPTION) {
-			    	removeRow();
-			    	
-			    } else if (response == JOptionPane.CLOSED_OPTION) {
-			     
-			    }
+			btnDelete = new JButton(new DeleteAction(this));
+			btnDelete.addActionListener(new ActionListener() {
 				
-			}
-		});
-		toolBar.add(btnDelete);
-		
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if(JOptionPane.showConfirmDialog(MagacinForm.this, "Da li ste sigurni?", "Brisanje", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
+						removeRow();
+				  
+				}
+			});
+			toolBar.add(btnDelete);
+		}
 		add(toolBar, "dock north");
 	}
 	
 	private void initTable(){
-		/*JScrollPane scrollPane = new JScrollPane(tblGrid);
-		add(scrollPane, "grow, wrap");*/
-		
-	      //Kreiranje tabele (atribut klase frmDrzave)
-			
-	      //Dodati u metodu za kreiranje tabele koja se  poziva iz konstruktora klase
-	      //frmDrzave:
-
-	      //Omogućavanje skrolovanja ubacivanjem tabele u ScrollPane
 	      JScrollPane scrollPane = new JScrollPane(tblGrid);      
 	      add(scrollPane, "wrap, grow");
 
-	      // Kreiranje TableModel-a, parametri: header-i kolona i broj redova 
+	      
 	      tableModel = new MagacinTableModel(new String[] {"ID",   "Naziv", "Sektor"}, 0);
 	      tblGrid.setModel(tableModel);
 	      
@@ -250,12 +230,9 @@ public class MagacinForm extends JDialog {
 			e.printStackTrace();
 		} 
 
-	      //Dozvoljeno selektovanje redova
 	      tblGrid.setRowSelectionAllowed(true);
-	      //Ali ne i selektovanje kolona 
 	      tblGrid.setColumnSelectionAllowed(false);
 
-	      //Dozvoljeno selektovanje samo jednog reda u jedinici vremena 
 	      tblGrid.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 	
@@ -274,13 +251,18 @@ public class MagacinForm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(mode==MODE_ADD){
-					addRow();
+					if(tfNaziv.getText().trim().equals("") || tfSektor.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(MagacinForm.this, "Morate popuniti polja!");
+					else
+						addRow();
 				}else if(mode==MODE_EDIT){
-					editRow();
-				}else{
-					tableModel.setRowCount(0);
+					if(tfNaziv.getText().trim().equals("") || tfSektor.getText().trim().equals(""))
+						JOptionPane.showMessageDialog(MagacinForm.this, "Morate popuniti polja!");
+					else
+						editRow();
+				}else
 					search();
-				}
+				
 					
 				
 			}
@@ -326,22 +308,22 @@ public class MagacinForm extends JDialog {
 		JLabel lblSifra = new JLabel ("ID:");
 		JLabel lblNaziv = new JLabel("Naziv:");
 		JLabel lbSektor=new JLabel("Sektor");
-
-		dataPanel.add(lblSifra);
-		dataPanel.add(tfId,"wrap");
-		dataPanel.add(lblNaziv);
-		dataPanel.add(tfNaziv);
-		dataPanel.add(lbSektor);
-		dataPanel.add(tfSektor);
-		dataPanel.add(btnSektor);
-		bottomPanel.add(dataPanel);
-
-
-		buttonsPanel.setLayout(new MigLayout("wrap"));
-		buttonsPanel.add(btnCommit);
-		buttonsPanel.add(btnRollback);
-		bottomPanel.add(buttonsPanel,"dock east");
-
+		if(sektor==null){
+			dataPanel.add(lblSifra);
+			dataPanel.add(tfId,"wrap");
+			dataPanel.add(lblNaziv);
+			dataPanel.add(tfNaziv);
+			dataPanel.add(lbSektor);
+			dataPanel.add(tfSektor);
+			dataPanel.add(btnSektor);
+			bottomPanel.add(dataPanel);
+	
+	
+			buttonsPanel.setLayout(new MigLayout("wrap"));
+			buttonsPanel.add(btnCommit);
+			buttonsPanel.add(btnRollback);
+			bottomPanel.add(buttonsPanel,"dock east");
+		}
 		add(bottomPanel, "grow, wrap");
 	}
 	
@@ -391,29 +373,29 @@ public class MagacinForm extends JDialog {
 	 }
 	 
 	 public void search(){
-		 magacin=new Magacin();
-		 if(!tfId.getText().trim().equals(""))
-			 magacin.setId(Integer.parseInt(tfId.getText().trim()));
+		magacin=new Magacin();
 		 
-		 magacin.setNaziv(tfNaziv.getText().trim());
-		 try {
+		magacin.setNaziv(tfNaziv.getText().trim());
+		try {
+			if(!tfId.getText().trim().equals(""))
+				magacin.setId(Integer.parseInt(tfId.getText().trim()));
+			
+			tableModel.setRowCount(0);
 			tableModel.search(magacin);
-			magacin=null;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch(NumberFormatException e1){
+			JOptionPane.showMessageDialog(MagacinForm.this, "Vrednost pretrage mora biti broj!");
 		}
 		 
 	 }
 	 
 	 private void removeRow() {
 		    int index = tblGrid.getSelectedRow(); 
-		    if (index == -1) //Ako nema selektovanog reda (tabela prazna)
-		      return;        // izlazak 
-		    //kada obrisemo tekuci red, selektovacemo sledeci (newindex):
+		    if (index == -1) 
+		      return;        
 		    int newIndex = index;  
 		    
-			//sem ako se obrise poslednji red, tada selektujemo prethodni
 		    if (index == tableModel.getRowCount() - 1) 
 		       newIndex--; 
 		    try {
@@ -456,6 +438,13 @@ public class MagacinForm extends JDialog {
 		
 		public Magacin getMagacin(){
 			return magacin;
+		}
+		
+		private Image setImage(){
+			ImageIcon icon1 = new ImageIcon(getClass().getResource(
+					"/img/magacin.png"));
+			Image img1 = icon1.getImage();
+			return img1;
 		}
 
 

@@ -1,253 +1,14 @@
 /*==============================================================*/
-/* DBMS name:      Sybase SQL Anywhere 12                       */
-/* Created on:     7/9/2016 2:38:32 PM                          */
-/*==============================================================*/
-
-/*
-if exists(select 1 from sys.sysforeignkey where role='FK_ANALITIK_RELATIONS_MAGACINS') then
-    alter table "Analitika magacinske kartice"
-       delete foreign key FK_ANALITIK_RELATIONS_MAGACINS
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_ANALITIK_RELATIONS_STAVKA P') then
-    alter table "Analitika magacinske kartice"
-       delete foreign key "FK_ANALITIK_RELATIONS_STAVKA P"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_ARTIKAL_RELATIONS_STAVKE P') then
-    alter table Artikal
-       delete foreign key "FK_ARTIKAL_RELATIONS_STAVKE P"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_ARTIKAL_RELATIONS_GRUPA AR') then
-    alter table Artikal
-       delete foreign key "FK_ARTIKAL_RELATIONS_GRUPA AR"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_CLAN KOM_REFERENCE_RADNIK') then
-    alter table "Clan komisije"
-       delete foreign key "FK_CLAN KOM_REFERENCE_RADNIK"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_CLAN KOM_REFERENCE_POPISNA') then
-    alter table "Clan komisije"
-       delete foreign key "FK_CLAN KOM_REFERENCE_POPISNA"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_MAGACIN_REFERENCE_PROMETNI') then
-    alter table Magacin
-       delete foreign key FK_MAGACIN_REFERENCE_PROMETNI
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_MAGACIN_RELATIONS_SEKTOR') then
-    alter table Magacin
-       delete foreign key FK_MAGACIN_RELATIONS_SEKTOR
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_MAGACINS_RELATIONS_MAGACIN') then
-    alter table "Magacinska kartica"
-       delete foreign key FK_MAGACINS_RELATIONS_MAGACIN
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_MAGACINS_RELATIONS_POSLOVNA') then
-    alter table "Magacinska kartica"
-       delete foreign key FK_MAGACINS_RELATIONS_POSLOVNA
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_MAGACINS_RELATIONS_ARTIKAL') then
-    alter table "Magacinska kartica"
-       delete foreign key FK_MAGACINS_RELATIONS_ARTIKAL
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_POPISNA _RELATIONS_POPISNI') then
-    alter table "Popisna komisija"
-       delete foreign key "FK_POPISNA _RELATIONS_POPISNI"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_POPISNI _RELATIONS_MAGACIN') then
-    alter table "Popisni dokument"
-       delete foreign key "FK_POPISNI _RELATIONS_MAGACIN"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_POPISNI _RELATIONS_POSLOVNA') then
-    alter table "Popisni dokument"
-       delete foreign key "FK_POPISNI _RELATIONS_POSLOVNA"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_POSLOVNA_RELATIONS_PREDUZEC') then
-    alter table "Poslovna godina"
-       delete foreign key FK_POSLOVNA_RELATIONS_PREDUZEC
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_POSLOVNI_REFERENCE_PREDUZEC') then
-    alter table "Poslovni partner"
-       delete foreign key FK_POSLOVNI_REFERENCE_PREDUZEC
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_PROMETNI_REFERENCE_VRSTA DO') then
-    alter table "Prometni dokument"
-       delete foreign key "FK_PROMETNI_REFERENCE_VRSTA DO"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_PROMETNI_REFERENCE_STATUS D') then
-    alter table "Prometni dokument"
-       delete foreign key "FK_PROMETNI_REFERENCE_STATUS D"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_PROMETNI_RELATIONS_MAGACIN') then
-    alter table "Prometni dokument"
-       delete foreign key FK_PROMETNI_RELATIONS_MAGACIN
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_PROMETNI_RELATIONS_POSLOVNA') then
-    alter table "Prometni dokument"
-       delete foreign key FK_PROMETNI_RELATIONS_POSLOVNA
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_PROMETNI_RELATIONS_POSLOVNI') then
-    alter table "Prometni dokument"
-       delete foreign key FK_PROMETNI_RELATIONS_POSLOVNI
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_RADNIK_RELATIONS_MAGACIN') then
-    alter table Radnik
-       delete foreign key FK_RADNIK_RELATIONS_MAGACIN
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_SEKTOR_RELATIONS_PREDUZEC') then
-    alter table Sektor
-       delete foreign key FK_SEKTOR_RELATIONS_PREDUZEC
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_STAVKA P_RELATIONS_ARTIKAL') then
-    alter table "Stavka prometnog dokumenta"
-       delete foreign key "FK_STAVKA P_RELATIONS_ARTIKAL"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_STAVKA P_RELATIONS_PROMETNI') then
-    alter table "Stavka prometnog dokumenta"
-       delete foreign key "FK_STAVKA P_RELATIONS_PROMETNI"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_STAVKE P_RELATIONS_POPISNI') then
-    alter table "Stavke popisa"
-       delete foreign key "FK_STAVKE P_RELATIONS_POPISNI"
-end if;
-
-if exists(select 1 from sys.sysforeignkey where role='FK_STAVKE P_RELATIONS_ARTIKAL') then
-    alter table "Stavke popisa"
-       delete foreign key "FK_STAVKE P_RELATIONS_ARTIKAL"
-end if;
-
-drop index if exists "Analitika magacinske kartice".RELATIONSHIP_28_FK;
-
-drop index if exists "Analitika magacinske kartice".ANALITIKA_MAGACINSKE_KARTICE_PK;
-
-drop table if exists "Analitika magacinske kartice";
-
-drop index if exists Artikal.RELATIONSHIP_32_FK;
-
-drop index if exists Artikal.RELATIONSHIP_30_FK;
-
-drop table if exists Artikal;
-
-drop index if exists "Clan komisije".POPISNA_KOMISIJA_PK;
-
-drop table if exists "Clan komisije";
-
-drop table if exists "Grupa artikala";
-
-drop index if exists Magacin.MAGACIN_PK;
-
-drop table if exists Magacin;
-
-drop index if exists "Magacinska kartica".RELATIONSHIP_26_FK;
-
-drop index if exists "Magacinska kartica".RELATIONSHIP_24_FK;
-
-drop index if exists "Magacinska kartica".RELATIONSHIP_2_FK;
-
-drop index if exists "Magacinska kartica".MAGACINSKA_KARTICA_PK;
-
-drop table if exists "Magacinska kartica";
-
-drop index if exists "Popisna komisija".POPISNA_KOMISIJA_PK;
-
-drop table if exists "Popisna komisija";
-
-drop index if exists "Popisni dokument".RELATIONSHIP_21_FK;
-
-drop index if exists "Popisni dokument".RELATIONSHIP_20_FK;
-
-drop index if exists "Popisni dokument".POPISNI_DOKUMENT_PK;
-
-drop table if exists "Popisni dokument";
-
-drop index if exists "Poslovna godina".POSLOVNA_GODINA_PK;
-
-drop table if exists "Poslovna godina";
-
-drop table if exists "Poslovni partner";
-
-drop index if exists Preduzece.PREDUZECE_PK;
-
-drop table if exists Preduzece;
-
-drop index if exists "Prometni dokument".RELATIONSHIP_18_FK;
-
-drop index if exists "Prometni dokument".RELATIONSHIP_22_FK;
-
-drop index if exists "Prometni dokument".RELATIONSHIP_9_FK;
-
-drop index if exists "Prometni dokument".PROMETNI_DOKUMENT_PK;
-
-drop table if exists "Prometni dokument";
-
-drop index if exists Radnik.RELATIONSHIP_31_FK;
-
-drop index if exists Radnik.RADNIK_PK;
-
-drop table if exists Radnik;
-
-drop index if exists Sektor.SEKTOR_PK;
-
-drop table if exists Sektor;
-
-drop index if exists "Status dokumenta".MAGACIN_PK;
-
-drop table if exists "Status dokumenta";
-
-drop index if exists "Stavka prometnog dokumenta".RELATIONSHIP_27_FK;
-
-drop index if exists "Stavka prometnog dokumenta".STAVKA_PROMETNOG_DOKUMENTA_PK;
-
-drop table if exists "Stavka prometnog dokumenta";
-
-drop index if exists "Stavke popisa".RELATIONSHIP_29_FK;
-
-drop index if exists "Stavke popisa".STAVKE_POPISA_PK;
-
-drop table if exists "Stavke popisa";
-
-drop index if exists "Vrsta dokumenta".MAGACIN_PK;
-
-drop table if exists "Vrsta dokumenta";*/
-
-/*==============================================================*/
 /* Table: "Analitika magacinske kartice"                        */
 /*==============================================================*/
 create table "Analitika magacinske kartice" 
 (
-   "stavka prometnog dok" numeric                      not null,
-   rbr                  numeric                        null,
-   datumPromene         date                           null,
-   vrDok                date                           null,
-   sifraDokumenta       numeric                         null,
+   "stavka prometnog dok" numeric                      null,
+   vrDok                numeric                        null,
    kolicina             numeric                        null,
-   cena                 decimal                        null,
-   vrednost             decimal                        null,
-   amk_id               numeric   identity                     not null,
-   smer					text							null,
+   vrednost             money						   null,
+   amk_id               numeric   identity             not null,
+   smer					text						   null,
    "magacinska kartica" numeric                        not null,
    "tip promene"        numeric                        not null,
    constraint "PK_ANALITIKA MAGACINSKE KARTIC" primary key clustered (amk_id)
@@ -258,7 +19,7 @@ create table "Analitika magacinske kartice"
 create table "Tip promene" 
 (
    tip_id numeric    identity                    not null,
-   naziv                text                   null,
+   naziv                text                     null,
    constraint "PK_TIP PROMENE" primary key clustered (tip_id)
 );
 
@@ -281,11 +42,10 @@ create index RELATIONSHIP_28_FK on "Analitika magacinske kartice" (
 /*==============================================================*/
 create table Artikal 
 (
-   pakovanje            text                   null,
+   pakovanje            decimal(18,4)                   null,
    jedMere              text                   null,
-   naziv                text                   null,
+   naziv                text                  not null,
    artikal_id           numeric   identity                     not null,
-   opis                 text                        null,
    "grupa artikala"     numeric                       not null,
    "stavke popisa"      numeric                        null,
    constraint PK_ARTIKAL primary key clustered (artikal_id)
@@ -340,10 +100,9 @@ create table "Grupa artikala"
 create table Magacin 
 (
    sektor               numeric                       not null,
-   naziv                text                  null,
+   naziv                text                 not null,
    magacin_id           numeric   identity                     not null,
-   "prometni dokument"  numeric                        null,
-   constraint PK_MAGACIN primary key clustered (magacin_id)
+  constraint PK_MAGACIN primary key clustered (magacin_id)
 );
 
 /*==============================================================*/
@@ -463,8 +222,9 @@ create index RELATIONSHIP_21_FK on "Popisni dokument" (
 create table "Poslovna godina" 
 (
    pg_id                numeric identity                       not null,
-   godina               numeric                        null,
+   godina               numeric                       not null,
    PIB                  numeric                       not null,
+   zakljucena			tinyint							null,
    constraint "PK_POSLOVNA GODINA" primary key clustered (pg_id)
 );
 
@@ -474,20 +234,7 @@ create table "Poslovna godina"
 create unique clustered index POSLOVNA_GODINA_PK on "Poslovna godina" (
 pg_id ASC
 );
-
-*==============================================================*/
-/* Table: "Poslovni partner"                                    */
-/*==============================================================*/
-create table "Poslovni partner" 
-(
-   pp_id                numeric identity                       not null,
-   PIB                  numeric                        null,
-   naziv                text                  null,
-   adresa               text                        null,
-   delatnost            text                        null,
-   constraint "PK_POSLOVNI PARTNER" primary key clustered (pp_id)
-);
-
+*/
 /*==============================================================*/
 /* Table: Preduzece                                             */
 /*==============================================================*/
@@ -497,6 +244,7 @@ create table Preduzece
    PIB                  numeric                      not null,
    brTelefona           numeric                        null,
    adresa               text                   null,
+   mesto				text					null,
    constraint PK_PREDUZECE primary key clustered (PIB)
 );
 
@@ -513,7 +261,6 @@ PIB ASC
 create table "Prometni dokument" 
 (
    magacin_id           numeric                        null,
-   "broj magacina"      numeric                        null,
    "datum nastanka"     date                           null,
    "datum knjizenja"    date                           null,
    "status dokumenta"   numeric                        null,
@@ -587,7 +334,7 @@ create table Sektor
    PIB                  numeric                        not null,
    adresa               text                   null,
    sektor_id            numeric    identity                    not null,
-   naziv                text                   null,
+   naziv                text                  not null,
    constraint PK_SEKTOR primary key clustered (sektor_id)
 );
 
@@ -604,7 +351,7 @@ sektor_id ASC
 create table "Status dokumenta" 
 (
    "status dokumenta id" numeric identity                       not null,
-   naziv                text                   null,
+   naziv                text                  not null,
    constraint "PK_STATUS DOKUMENTA" primary key clustered ("status dokumenta id")
 );
 
@@ -621,13 +368,12 @@ create unique clustered index MAGACIN_PK on "Status dokumenta" (
 create table "Stavka prometnog dokumenta" 
 (
    "prometni dokument"  numeric                        null,
-   rbr                  numeric                        null,
+   rbr                  numeric identity			   not null,
    kolicina             numeric                        null,
    cena                 decimal                        null,
    vrednost             decimal                        null,
-   sp_id                numeric  identity                      not null,
    artikal              numeric                        null,
-   constraint "PK_STAVKA PROMETNOG DOKUMENTA" primary key clustered (sp_id)
+   constraint "PK_STAVKA PROMETNOG DOKUMENTA" primary key clustered (rbr)
 );
 
 /*==============================================================*/
@@ -689,6 +435,28 @@ create unique clustered index MAGACIN_PK on "Vrsta dokumenta" (
 "vrsta dokumenta id" ASC
 );*/
 
+/*==============================================================*/
+/* Table: "Vrsta dokumenta"                                     */
+/*==============================================================*/
+create table Kupac
+(
+	magacin			numeric not null,
+	dokument			numeric not null,
+    primary key (magacin, dokument)
+);
+
+alter table Kupac
+	add constraint FK_KUPAC_MAGACIN foreign key (magacin)
+		references Magacin (magacin_id)
+		
+alter table Kupac
+	add constraint FK_KUPAC_DOKUMENT foreign key (dokument)
+		references "Prometni dokument" (pd_id)
+
+alter table "Analitika magacinske kartice"
+   add constraint FK_ANALITIK_RELATIONS_VrstaDok foreign key ("vrDok")
+      references "Vrsta dokumenta" ("vrsta dokumenta id");
+
 alter table "Analitika magacinske kartice"
    add constraint FK_ANALITIK_RELATIONS_MAGACINS foreign key ("magacinska kartica")
       references "Magacinska kartica" (mk_id);
@@ -697,7 +465,7 @@ alter table "Analitika magacinske kartice"
 
 alter table "Analitika magacinske kartice"
    add constraint "FK_ANALITIK_RELATIONS_STAVKA P" foreign key ("stavka prometnog dok")
-      references "Stavka prometnog dokumenta" (sp_id);
+      references "Stavka prometnog dokumenta" (rbr);
       --on update restrict
       --on delete restrict;
 
@@ -726,12 +494,6 @@ alter table "Clan komisije"
 alter table "Clan komisije"
    add constraint "FK_CLAN KOM_REFERENCE_POPISNA" foreign key ("popisna komisija")
       references "Popisna komisija" (pk_id);
-      --on update restrict
-      --on delete restrict;
-
-alter table Magacin
-   add constraint FK_MAGACIN_REFERENCE_PROMETNI foreign key ("prometni dokument")
-      references "Prometni dokument" (pd_id);
       --on update restrict
       --on delete restrict;
 
@@ -783,12 +545,6 @@ alter table "Poslovna godina"
       --on update restrict
       --on delete restrict;
 
-alter table "Poslovni partner"
-   add constraint FK_POSLOVNI_REFERENCE_PREDUZEC foreign key (PIB)
-      references Preduzece (PIB);
-      --on update restrict
-      --on delete restrict;
-
 alter table "Prometni dokument"
    add constraint "FK_PROMETNI_REFERENCE_VRSTA DO" foreign key ("vrsta dokumenta id")
       references "Vrsta dokumenta" ("vrsta dokumenta id");
@@ -815,7 +571,7 @@ alter table "Prometni dokument"
 
 alter table "Prometni dokument"
    add constraint FK_PROMETNI_RELATIONS_POSLOVNI foreign key ("poslovni partner")
-      references "Poslovni partner" (pp_id);
+      references Preduzece (PIB);
       --on update restrict
       --on delete restrict;
 
@@ -855,7 +611,7 @@ alter table "Stavke popisa"
       --on update restrict
       --on delete restrict;
 
-insert into [Vrsta dokumenta] values ( 'Prijemnica'),( 'Otpremnica'), ( 'Medjumagacinski dokument')
+insert into [Vrsta dokumenta] values ( 'Primka'),( 'Otpremnica'), ( 'Medjumagacinski dokument')
 
 insert into [Status dokumenta] values( 'U formiranju'), ( 'Proknjizen'), ( 'Storniran')
 
